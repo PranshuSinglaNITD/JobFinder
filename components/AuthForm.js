@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import {signIn,useSession} from 'next-auth/react'
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast,ToastContainer, Zoom } from "react-toastify";
 import { Mail, Lock, User, Building, Globe, ArrowRight, Loader2, Briefcase, UserCircle, Star } from "lucide-react";
+import SignInBtn from "./SignInBtn";
 
 // --- ANIMATION VARIANTS ---
 const fadeVariants = {
@@ -301,12 +303,15 @@ export default function AuthForm({ initialView = "login" }) {
                                 >
                                     {isLoginView ? "Sign up" : "Log in"}
                                 </button>
+                                <div className="mt-2">
+                                    <SignInBtn/>
+                                </div>
                             </p>
                         </motion.div>
                     </AnimatePresence>
                 </div>
             </div>
-
+            
             {/* --- RIGHT SIDE: THE IMAGE (The "Interesting" Part) --- */}
             <div className="hidden lg:block lg:w-1/2 relative overflow-hidden bg-slate-900">
                 {/* Background Image */}

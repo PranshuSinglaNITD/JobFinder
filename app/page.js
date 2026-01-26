@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { 
   ArrowRight, Users, Briefcase, BarChart3, Search, 
-  CheckCircle, Sparkles, TrendingUp, ChevronRight 
+  CheckCircle, Sparkles, TrendingUp, ChevronRight,
+  Book
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -308,18 +309,19 @@ function CandidateHome() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Feature 1 */}
-          <div className="group p-10 rounded-[2.5rem] bg-slate-50 dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800 hover:border-blue-500 dark:hover:border-blue-500 transition-colors">
+          <Link href={'/resume-matcher'}className="group p-10 rounded-[2.5rem] bg-slate-50 dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800 hover:border-blue-500 dark:hover:border-blue-500 transition-colors">
             <div className="w-14 h-14 bg-blue-600 text-white rounded-2xl flex items-center justify-center mb-6 text-2xl shadow-lg shadow-blue-600/20 group-hover:scale-110 transition-transform">
-              <Search />
+              <Book />
             </div>
-            <h3 className="text-2xl font-bold mb-3">Smart Search</h3>
+              <h3 className="text-2xl font-bold mb-3">Analyse Resume</h3>
             <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-              Our algorithm filters by role, location, and specific tech stacks to find the perfect match for your profile instantly.
+              Upload your resume and the job description to see how well you match. Our NLP model analyzes keyword density and semantic relevance.
             </p>
-          </div>
+            
+          </Link>
 
           {/* Feature 2: ML Model Highlight */}
-          <div className="group p-10 rounded-[2.5rem] bg-slate-900 dark:bg-zinc-800 text-white border border-slate-800 dark:border-zinc-700 relative overflow-hidden">
+          <Link href={'/model'} className="group p-10 rounded-[2.5rem] bg-slate-900 dark:bg-zinc-800 text-white border border-slate-800 dark:border-zinc-700 relative overflow-hidden">
             <div className="absolute top-0 right-0 bg-gradient-to-l from-purple-600 to-blue-600 text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl uppercase tracking-widest">
               AI Powered
             </div>
@@ -330,7 +332,7 @@ function CandidateHome() {
             <p className="text-slate-300 leading-relaxed">
               Stop guessing. Enter your experience and skills to get a precise, AI-driven prediction of your market value.
             </p>
-          </div>
+          </Link>
 
           {/* Feature 3 */}
           <div className="group p-10 rounded-[2.5rem] bg-slate-50 dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800 hover:border-green-500 dark:hover:border-green-500 transition-colors">

@@ -19,7 +19,7 @@ export async function GET(req) {
         path: "jobId",
         select: "title company location jobType", // Only get what we need
       })
-      .sort({ createdAt: -1 }); // Newest first
+      .sort({ createdAt: -1 }); // Sorting means newwest first
 
     return NextResponse.json({ success: true, data: applications }, { status: 200 });
 

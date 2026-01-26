@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { usePathname, useRouter } from "next/navigation";
 import { Sparkles, LogOut, BotMessageSquareIcon } from "lucide-react";
 
@@ -11,6 +12,7 @@ export default function Navbar() {
   const [user, setUser] = useState(null);
   const pathname = usePathname();
   const router = useRouter();
+  const {status,data:session}=useSession()
 
   // 2. useEffect
   useEffect(() => {
@@ -62,7 +64,7 @@ export default function Navbar() {
     ];
   } else if (user?.role === "candidate") {
     navLinks = [
-      { name: "Find Jobs", href: "/getJob" },
+      { name: "Analyse Resume", href: "/resume-matcher" },
       { name: "Community Buzz", href: "/feedsCandidate" },
       { name: "Salary Prediction", href: "/model" }, 
       { name: "My Applications", href: "/myApplications" },
@@ -201,7 +203,7 @@ export default function Navbar() {
               <>
                 <div className="border-t border-slate-100 dark:border-slate-800 my-2 pt-2">
                   <div className="px-3 py-2 text-sm text-slate-500">
-                    Signed in as <span className="font-bold text-slate-900 dark:text-white">{user.firstName}</span>
+                    Signed in as <span className="font-bold text-slate-900 dark:text-white">{status==='authenticated'?session?.user?.name:user.firstName}</span>
                   </div>
                   
                   <Link 
