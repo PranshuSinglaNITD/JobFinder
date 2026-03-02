@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { usePathname, useRouter } from "next/navigation";
 import { Sparkles, LogOut, BotMessageSquareIcon } from "lucide-react";
+import NotificationBell from "./NotificationBell";
 
 export default function Navbar() {
   // 1. ALL HOOKS MUST RUN FIRST
@@ -79,11 +80,8 @@ export default function Navbar() {
   // 6. Final Render
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-black/80 backdrop-blur-md">
-      {/* Changed max-w-7xl to w-full to use full width and added px-6 for edge spacing */}
       <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
-          
-          {/* --- LEFT: LOGO --- */}
           <div className="flex shrink-0 items-center">
             <Link href="/" className="text-2xl font-bold tracking-tighter text-blue-600 dark:text-blue-500">
               Job<span className="text-slate-900 dark:text-white">Finder.</span>
@@ -107,25 +105,19 @@ export default function Navbar() {
               </Link>
             ))}
           </div>
-
+            <NotificationBell/>
           {/* --- RIGHT: USER ACTIONS --- */}
           <div className="hidden md:flex items-center gap-5">
             {user ? (
               // LOGGED IN VIEW
               <>
-                {/* 1. AI Assistant Button */}
-                <Link 
+                {user?.role==='candidate'?(<Link 
                   href="/chatBot" 
                   className="flex items-center gap-2 px-4 py-2 rounded-full bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-sm font-semibold shadow-md shadow-blue-500/20 transition-all hover:scale-105 active:scale-95"
                 >
                   <BotMessageSquareIcon size={16} />
                   <span>JobBot</span>
-                </Link>
-
-                {/* 2. "Hi, Name" Text */}
-                <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
-                  Hi, {user.firstName || user.name || "User"}
-                </span>
+                </Link>):<></>}
 
                 {/* 3. Profile Avatar/Symbol */}
                 <Link 
