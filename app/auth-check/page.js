@@ -12,6 +12,7 @@ export default function AuthCheck() {
 
   useEffect(() => {
     const verifyUser = async () => {
+      //checks if user exist in database
       if (status === "authenticated" && session?.user?.email) {
         try {
           const res = await fetch("/api/auth/check-user", {
@@ -51,7 +52,7 @@ export default function AuthCheck() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-white dark:bg-black font-sans">
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
         className="flex flex-col items-center gap-4"
       >

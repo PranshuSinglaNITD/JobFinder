@@ -34,18 +34,23 @@ const userSchema = new mongoose.Schema(
       enum: ["candidate", "recruiter"],
       default: "candidate",
     },
-    // Company details (specifically for recruiters)
+    
     company: {
       name: { type: String, default: "" },
       website: { type: String, default: "" },
       description: { type: String, default: "" },
     },
-    // Additional profile fields
+
     location: { type: String, default: "" },
     occupation: { type: String, default: "" },
     viewedProfile: { type: Number, default: 0 },
     impressions: { type: Number, default: 0 },
     
+    socialLinks: {
+      linkedin: { type: String, default: "" },
+      twitter: { type: String, default: "" },
+      portfolio: { type: String, default: "" },
+    },
     // You can keep a separate profile object for deeper details if you want,
     // but ensure your update logic handles it.
     skills: { type: Array, default: [] },

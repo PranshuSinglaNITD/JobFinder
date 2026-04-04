@@ -28,6 +28,7 @@ export const authOptions = {
       if (dbUser) {
         session.user.id = dbUser._id.toString();
         session.user.role = dbUser.role;
+        session.user.companyName=dbUser.company?.name
       }
       return session;
     },

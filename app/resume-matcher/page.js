@@ -24,7 +24,7 @@ export default function ResumeMatcher() {
     setLoading(true);
     const formData = new FormData();
     formData.append("resume", file);
-    formData.append("job_description", jobDesc);
+    formData.append("jobDesc", jobDesc);
 
     try {
       const res = await fetch("http://localhost:8000/api/match-resume", {
@@ -59,7 +59,7 @@ export default function ResumeMatcher() {
             </span>
           </div>
           <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4">
-            AI Resume <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Matcher</span>
+            AI Resume <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Analyzer</span>
           </h1>
           <p className="text-lg text-slate-500 dark:text-slate-400 max-w-2xl mx-auto">
             Upload your resume and the job description to see how well you match. Our NLP model analyzes keyword density and semantic relevance.

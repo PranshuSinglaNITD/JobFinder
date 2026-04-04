@@ -105,9 +105,10 @@ export default function Navbar() {
               </Link>
             ))}
           </div>
-            <NotificationBell/>
+            
           {/* --- RIGHT: USER ACTIONS --- */}
           <div className="hidden md:flex items-center gap-5">
+            {user?.role==='candidate'&&<NotificationBell/>}
             {user ? (
               // LOGGED IN VIEW
               <>
