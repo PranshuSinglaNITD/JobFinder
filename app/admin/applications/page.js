@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from "react";
 import {
-    CheckCircle, XCircle, Clock, FileText,
-    MapPin, Calendar, ExternalLink, Search, Mail, Filter, X
+    CheckCircle, XCircle, Calendar, X
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSession } from "next-auth/react";
@@ -112,19 +111,19 @@ export default function RecruiterApplications() {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-black font-sans text-slate-900 dark:text-slate-100 p-8">
+        <div className="min-h-screen bg-slate-50 px-4 py-6 font-sans text-slate-900 dark:bg-black dark:text-slate-100 sm:p-8">
             <div className="max-w-7xl mx-auto">
 
                 {!loading && apps.length > 0 && <SalaryChart applications={apps} />}
 
                 {/* Header */}
-                <div className="flex flex-col md:flex-row justify-between items-end mb-8 gap-4">
+                <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
                     <div>
                         <h1 className="text-3xl font-bold">Candidate Applications</h1>
                         <p className="text-slate-500 mt-1">Manage and review candidates for your posted jobs.</p>
                     </div>
 
-                    <div className="flex gap-2 bg-white dark:bg-zinc-900 p-1 rounded-lg border border-slate-200 dark:border-zinc-800">
+                    <div className="flex flex-wrap gap-2 rounded-lg border border-slate-200 bg-white p-1 dark:border-zinc-800 dark:bg-zinc-900">
                         {["All", "Applied", "Shortlisted", "Rejected"].map(f => (
                             <button
                                 key={f}
@@ -146,10 +145,10 @@ export default function RecruiterApplications() {
                         <motion.div
                             layout
                             key={app._id}
-                            className="bg-white dark:bg-zinc-900 rounded-xl p-6 border border-slate-200 dark:border-zinc-800 shadow-sm hover:shadow-md transition-shadow flex flex-col lg:flex-row gap-6 items-start lg:items-center justify-between"
+                            className="flex flex-col items-start justify-between gap-5 rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 sm:p-6 lg:flex-row lg:items-center"
                         >
                             {/* Candidate Info */}
-                            <div className="flex items-start gap-4 flex-1">
+                            <div className="flex flex-1 items-start gap-3 sm:gap-4">
                                 <div className="h-12 w-12 rounded-full bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-lg">
                                     {app.applicantId?.firstName?.[0] || "U"}
                                 </div>
@@ -163,7 +162,7 @@ export default function RecruiterApplications() {
                             </div>
 
                             {/* Resume & Meta */}
-                            <div className="flex flex-col sm:flex-row gap-4 sm:gap-8 text-sm text-slate-500">
+                            <div className="flex w-full flex-col gap-3 text-sm text-slate-500 sm:flex-row sm:gap-6 lg:w-auto lg:flex-col xl:flex-row xl:gap-8">
                                 <div className="flex items-center gap-2">
                                     <Calendar size={16} /> {new Date(app.createdAt).toLocaleDateString()}
                                 </div>
@@ -178,7 +177,7 @@ export default function RecruiterApplications() {
                             </div>
 
                             {/* Actions */}
-                            <div className="flex items-center gap-3 w-full lg:w-auto mt-4 lg:mt-0 pt-4 lg:pt-0 border-t lg:border-t-0 border-slate-100 dark:border-zinc-800">
+                            <div className="mt-2 flex w-full flex-col gap-3 border-t border-slate-100 pt-4 dark:border-zinc-800 sm:flex-row sm:items-center lg:mt-0 lg:w-auto lg:border-t-0 lg:pt-0">
 
                                 {app.status === "Applied" ? (
                                     <>
@@ -190,7 +189,7 @@ export default function RecruiterApplications() {
                                         </button>
                                         <button
                                             onClick={() => openAcceptModal(app)}
-                                            className=" cursor-pointer flex-1 lg:flex-none px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-600/20 font-medium transition-colors"
+                                            className="cursor-pointer flex-1 px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-600/20 font-medium transition-colors"
                                         >
                                             Shortlist & Interview
                                         </button>
@@ -227,7 +226,7 @@ export default function RecruiterApplications() {
                                 </div>
 
                                 <form onSubmit={submitAccept} className="p-6 space-y-4">
-                                    <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                         <div>
                                             <label className="block text-sm font-medium mb-1.5">Date</label>
                                             <input required type="date" className="w-full p-2.5 rounded-lg border border-slate-300 dark:border-zinc-700 bg-transparent"

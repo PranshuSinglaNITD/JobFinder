@@ -88,7 +88,7 @@ export default function MyApplications() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="group relative bg-white dark:bg-zinc-900 rounded-2xl p-6 border border-slate-200 dark:border-zinc-800 shadow-sm hover:shadow-lg hover:border-blue-200 dark:hover:border-blue-900 transition-all duration-300"
+                className="group relative rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-all duration-300 hover:border-blue-200 hover:shadow-lg dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-blue-900 sm:p-6"
               >
                 <div className="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
                   
@@ -122,7 +122,7 @@ export default function MyApplications() {
                   </div>
 
                   {/* Right Side Stats */}
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-8 w-full md:w-auto mt-4 md:mt-0 pt-4 md:pt-0 border-t md:border-t-0 border-slate-100 dark:border-zinc-800">
+                  <div className="mt-4 flex w-full flex-col items-start gap-4 border-t border-slate-100 pt-4 dark:border-zinc-800 sm:flex-row sm:items-center sm:gap-6 md:mt-0 md:w-auto md:border-t-0 md:pt-0">
                     
                     {/* Resume Info */}
                     <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 dark:bg-zinc-800 rounded-lg border border-slate-100 dark:border-zinc-700">
@@ -160,7 +160,7 @@ export default function MyApplications() {
             </div>
             <h2 className="text-xl font-bold text-slate-900 dark:text-white">No applications yet</h2>
             <p className="text-slate-500 max-w-sm mt-2 mb-8">
-              You haven't applied to any jobs yet. Start exploring opportunities now!
+              You haven&apos;t applied to any jobs yet. Start exploring opportunities now!
             </p>
             <Link 
               href="/jobs" 

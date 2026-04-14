@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { 
-  Send, Bot, User, Sparkles, Loader2, Plus, 
+  Bot, User, Sparkles, Loader2, Plus, 
   MessageSquare, FileText, ArrowUp, Menu, X
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -27,6 +27,12 @@ export default function JobChatbot() {
   // New Chat Setup State (The Resume Gatekeeper)
   const [resumeText, setResumeText] = useState("");
   const [isSettingUp, setIsSettingUp] = useState(true);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.innerWidth < 768) {
+      setSidebarOpen(false);
+    }
+  }, []);
 
   // --- 1. LOAD SIDEBAR HISTORY ---
   // In a real app, you would fetch this from a new GET route: `/api/chat/history?userId=${session?.user?.id}`
@@ -135,14 +141,15 @@ export default function JobChatbot() {
   };
 
   return (
-    <div className="flex h-screen bg-white dark:bg-black font-sans text-slate-900 dark:text-slate-100 overflow-hidden">
+    <div className="flex h-[calc(100svh-4rem)] min-h-[34rem] overflow-hidden bg-white font-sans text-slate-900 dark:bg-black dark:text-slate-100">
+      {sidebarOpen && <div className="absolute inset-0 z-20 bg-black/30 md:hidden" onClick={() => setSidebarOpen(false)} />}
       
       {/* --- SIDEBAR (History) --- */}
       <AnimatePresence>
         {sidebarOpen && (
           <motion.div 
             initial={{ x: -300 }} animate={{ x: 0 }} exit={{ x: -300 }}
-            className="absolute md:relative z-30 w-72 h-full bg-slate-50 dark:bg-zinc-900 border-r border-slate-200 dark:border-zinc-800 flex flex-col shadow-2xl md:shadow-none"
+            className="absolute z-30 flex h-full w-[85vw] max-w-72 flex-col border-r border-slate-200 bg-slate-50 shadow-2xl dark:border-zinc-800 dark:bg-zinc-900 md:relative md:shadow-none"
           >
             <div className="p-4 flex justify-between items-center border-b border-slate-200 dark:border-zinc-800">
               <h2 className="font-bold text-lg flex items-center gap-2">
@@ -188,7 +195,7 @@ export default function JobChatbot() {
       <div className="flex-1 flex flex-col relative min-w-0">
         
         {/* Mobile Header */}
-        <header className="md:hidden flex items-center p-4 border-b border-slate-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md sticky top-0 z-20">
+        <header className="sticky top-0 z-20 flex items-center border-b border-slate-200 bg-white/80 p-4 backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-900/80 md:hidden">
           <button onClick={() => setSidebarOpen(true)} className="p-2 mr-3 bg-slate-100 dark:bg-zinc-800 rounded-lg">
             <Menu size={20} />
           </button>
@@ -202,17 +209,17 @@ export default function JobChatbot() {
             {isSettingUp && (
               <motion.div 
                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}
-                className="absolute inset-0 z-10 flex flex-col items-center justify-center p-6 bg-slate-50/90 dark:bg-black/90 backdrop-blur-sm"
+                className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-slate-50/90 p-4 backdrop-blur-sm dark:bg-black/90 sm:p-6"
               >
                 <div className="w-20 h-20 bg-gradient-to-tr from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center mb-6 shadow-xl shadow-blue-500/20">
                   <Bot size={40} className="text-white" />
                 </div>
-                <h2 className="text-3xl font-extrabold mb-2 text-center">Let's find your next role.</h2>
+                <h2 className="mb-2 text-center text-2xl font-extrabold sm:text-3xl">Let&apos;s find your next role.</h2>
                 <p className="text-slate-500 text-center max-w-md mb-8">
                   To give you personalized job matches and career advice, I need to know your background.
                 </p>
 
-                <div className="w-full max-w-xl bg-white dark:bg-zinc-900 p-6 rounded-2xl shadow-xl border border-slate-200 dark:border-zinc-800">
+                <div className="w-full max-w-xl rounded-2xl border border-slate-200 bg-white p-4 shadow-xl dark:border-zinc-800 dark:bg-zinc-900 sm:p-6">
                   <label className="flex items-center gap-2 font-bold mb-3 text-slate-700 dark:text-slate-300">
                     <FileText size={18} className="text-blue-600" /> Paste your Resume / LinkedIn Summary
                   </label>
@@ -228,20 +235,20 @@ export default function JobChatbot() {
           </AnimatePresence>
 
           {/* THE ACTUAL MESSAGES */}
-          <div className="max-w-4xl mx-auto space-y-6 p-6 pb-32">
+          <div className="mx-auto max-w-4xl space-y-6 p-4 pb-28 sm:p-6 sm:pb-32">
             {messages.map((msg, idx) => (
               <motion.div 
                 key={idx}
                 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                className={`flex gap-4 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                className={`flex gap-3 sm:gap-4 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
               >
                 {msg.role !== "user" && (
-                  <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center shrink-0 shadow-md">
+                  <div className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-600 shadow-md sm:flex">
                     <Sparkles size={18} className="text-white" />
                   </div>
                 )}
 
-                <div className={`relative max-w-[85%] px-6 py-4 rounded-2xl text-sm leading-relaxed ${
+                <div className={`relative max-w-[90%] rounded-2xl px-4 py-3 text-sm leading-relaxed sm:max-w-[85%] sm:px-6 sm:py-4 ${
                   msg.role === "user" 
                     ? "bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 rounded-br-sm shadow-md" 
                     : "bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-bl-sm shadow-sm"
@@ -256,7 +263,7 @@ export default function JobChatbot() {
                 </div>
 
                 {msg.role === "user" && (
-                  <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-zinc-800 flex items-center justify-center shrink-0 shadow-inner">
+                  <div className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-200 shadow-inner dark:bg-zinc-800 sm:flex">
                     <User size={18} className="text-slate-500" />
                   </div>
                 )}
@@ -280,7 +287,7 @@ export default function JobChatbot() {
         </div>
 
         {/* --- INPUT AREA --- */}
-        <div className="p-4 bg-white dark:bg-black border-t border-slate-200 dark:border-zinc-800 z-20">
+        <div className="z-20 border-t border-slate-200 bg-white p-3 dark:border-zinc-800 dark:bg-black sm:p-4">
           <div className="max-w-4xl mx-auto">
             <form onSubmit={handleSend} className="relative flex items-center bg-slate-50 dark:bg-zinc-900 rounded-2xl border border-slate-300 dark:border-zinc-700 shadow-inner focus-within:ring-2 focus-within:ring-blue-500 transition-all overflow-hidden">
               <input

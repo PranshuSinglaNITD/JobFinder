@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { 
   User, Lock, Camera, Save, 
   MapPin, Loader2, CheckCircle, AlertCircle,
-  Shield, Briefcase, Mail
+  Shield, Briefcase, Mail, FileText, UploadCloud
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -22,13 +22,18 @@ export default function CandidateProfile() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
   
+  // --- NEW STATE FOR RESUME UPLOAD ---
+  const [resumeFile, setResumeFile] = useState(null);
+  const [resumeStatus, setResumeStatus] = useState("idle"); // idle, loading, success, error
+  const [resumeError, setResumeError] = useState("");
+
   const [formData, setFormData] = useState({
     _id: "",
     firstName: "",
     lastName: "",
     email: "",
     location: "",
-    occupation: "", // Job Title
+    occupation: "",
     picturePath: "",
     currentPassword: "",
     newPassword: "",
@@ -88,7 +93,6 @@ export default function CandidateProfile() {
         location: formData.location,
         occupation: formData.occupation,
         picturePath: formData.picturePath,
-        // No company data needed for candidates
       };
 
       const res = await fetch("/api/users/update", {
@@ -149,13 +153,53 @@ export default function CandidateProfile() {
     }
   };
 
+  // --- 6. RESUME UPLOAD HANDLERS ---
+  const handleResumeChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      setResumeFile(e.target.files[0]);
+      setResumeStatus("idle");
+    }
+  };
+
+  const handleResumeUpload = async () => {
+    if (!resumeFile || !formData._id) return;
+    
+    setResumeStatus("loading");
+    setResumeError("");
+
+    const payload = new FormData();
+    payload.append("file", resumeFile);
+    payload.append("userId", formData._id); // Using ID from local state
+
+    try {
+      const res = await fetch("/api/users/resume", {
+        method: "POST",
+        body: payload,
+      });
+
+      if (res.ok) {
+        setResumeStatus("success");
+      } else {
+        const data = await res.json();
+        setResumeError(data.message || "Upload failed.");
+        setResumeStatus("error");
+      }
+    } catch (error) {
+      console.error(error);
+      setResumeError("A network error occurred.");
+      setResumeStatus("error");
+    }
+  };
+
+  // Updated Tabs Array
   const tabs = [
     { id: "general", label: "My Profile", icon: User },
+    { id: "resume", label: "My Resume", icon: FileText },
     { id: "security", label: "Login & Security", icon: Shield },
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-black py-12 px-4 font-sans text-slate-900 dark:text-slate-100 selection:bg-blue-100 selection:text-blue-900">
+    <div className="min-h-screen bg-slate-50 dark:bg-black py-8 px-4 font-sans text-slate-900 dark:text-slate-100 selection:bg-blue-100 selection:text-blue-900 sm:py-12">
       <div className="max-w-5xl mx-auto">
         
         {/* Header */}
@@ -174,12 +218,12 @@ export default function CandidateProfile() {
           
           {/* Sidebar Navigation */}
           <div className="lg:col-span-3">
-            <nav className="space-y-2 sticky top-24">
+            <nav className="sticky top-24 flex gap-2 overflow-x-auto pb-1 lg:block lg:space-y-2 lg:overflow-visible">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl font-medium transition-all duration-200 relative overflow-hidden group ${
+                  className={`relative flex shrink-0 items-center gap-3 overflow-hidden rounded-xl px-4 py-3.5 font-medium transition-all duration-200 group lg:w-full ${
                     activeTab === tab.id 
                       ? "text-blue-600 bg-blue-50 dark:bg-blue-900/20 shadow-sm" 
                       : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-zinc-800"
@@ -291,7 +335,6 @@ export default function CandidateProfile() {
                         <p className="text-xs text-slate-400 mt-1 ml-1">Email cannot be changed.</p>
                       </div>
                       
-                      {/* Optional but nice for candidates */}
                       <div className="group">
                         <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Job Title</label>
                         <div className="relative">
@@ -308,13 +351,67 @@ export default function CandidateProfile() {
                       </div>
                     </div>
 
-                    <div className="flex justify-end pt-4">
-                      <button type="submit" disabled={loading} className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-3 rounded-xl font-bold shadow-lg shadow-blue-600/20 flex items-center gap-2 disabled:opacity-70 transition-all active:scale-95">
+                    <div className="flex justify-stretch pt-4 sm:justify-end">
+                      <button type="submit" disabled={loading} className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-8 py-3 font-bold text-white shadow-lg shadow-blue-600/20 transition-all active:scale-95 disabled:opacity-70 hover:bg-blue-500 sm:w-auto">
                         {loading ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
                         Save Profile
                       </button>
                     </div>
                   </motion.form>
+                )}
+
+                {/* --- NEW TAB: RESUME UPLOAD --- */}
+                {activeTab === "resume" && (
+                  <motion.div 
+                    key="resume"
+                    variants={contentVariants}
+                    initial="hidden" animate="visible" exit="exit"
+                    className="space-y-8 relative z-10"
+                  >
+                    <div className="p-4 bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-900/30 rounded-xl mb-6">
+                        <h4 className="text-blue-800 dark:text-blue-500 font-semibold flex items-center gap-2 text-sm">
+                            <FileText size={16} /> AI Visibility
+                        </h4>
+                        <p className="text-blue-700 dark:text-blue-400 text-xs mt-1">
+                            Uploading your resume allows our AI to automatically match you with jobs and suggest your profile to top recruiters.
+                        </p>
+                    </div>
+
+                    <div className="flex flex-col gap-6">
+                      <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-slate-300 dark:border-zinc-700 rounded-2xl cursor-pointer hover:bg-slate-50 dark:hover:bg-zinc-800/50 transition-colors group">
+                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                          <UploadCloud className="w-10 h-10 text-blue-500 mb-3 group-hover:scale-110 transition-transform" />
+                          <p className="text-base text-slate-600 dark:text-slate-400 font-medium mb-1">
+                            {resumeFile ? resumeFile.name : "Click or drag to upload"}
+                          </p>
+                          <p className="text-xs text-slate-400">PDF, DOCX, or DOC (Max 5MB)</p>
+                        </div>
+                        <input 
+                          type="file" 
+                          className="hidden" 
+                          accept=".pdf,.docx,.doc" 
+                          onChange={handleResumeChange} 
+                        />
+                      </label>
+
+                      <button
+                        onClick={handleResumeUpload}
+                        disabled={!resumeFile || resumeStatus === "loading" || resumeStatus === "success"}
+                        className="w-full sm:w-auto self-end py-3 px-8 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 dark:disabled:bg-zinc-800 text-white font-bold rounded-xl transition-all shadow-lg shadow-blue-600/20 disabled:shadow-none flex items-center justify-center gap-2"
+                      >
+                        {resumeStatus === "loading" && <Loader2 className="animate-spin" size={18} />}
+                        {resumeStatus === "success" && <CheckCircle size={18} />}
+                        {resumeStatus === "idle" && "Extract & Save Resume"}
+                        {resumeStatus === "loading" && "Processing with AI..."}
+                        {resumeStatus === "success" && "Saved to Profile!"}
+                        {resumeStatus === "error" && "Try Again"}
+                      </button>
+
+                      {resumeStatus === "error" && (
+                        <p className="text-sm text-red-500 text-right font-medium">{resumeError}</p>
+                      )}
+                    </div>
+                  </motion.div>
                 )}
 
                 {/* --- SECURITY TAB --- */}
@@ -349,8 +446,8 @@ export default function CandidateProfile() {
                         <input type="password" name="confirmPassword" required value={formData.confirmPassword} onChange={handleChange} className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-zinc-800/50 border border-slate-200 dark:border-zinc-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all" />
                         </div>
                     </div>
-                    <div className="flex justify-end pt-4">
-                        <button type="submit" disabled={loading} className="bg-slate-900 dark:bg-white hover:bg-slate-800 dark:hover:bg-slate-200 text-white dark:text-black px-8 py-3 rounded-xl font-bold shadow-lg flex items-center gap-2 disabled:opacity-70 transition-all active:scale-95">
+                    <div className="flex justify-stretch pt-4 sm:justify-end">
+                        <button type="submit" disabled={loading} className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-8 py-3 font-bold text-white shadow-lg transition-all active:scale-95 disabled:opacity-70 hover:bg-slate-800 dark:bg-white dark:text-black dark:hover:bg-slate-200 sm:w-auto">
                         {loading ? <Loader2 className="animate-spin" size={20} /> : <Lock size={20} />}
                         Update Password
                         </button>

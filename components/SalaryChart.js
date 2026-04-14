@@ -2,7 +2,7 @@
 
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
-  PieChart, Pie, Cell, LineChart, Line 
+  PieChart, Pie, Cell
 } from 'recharts';
 
 export default function SalaryChart({ applications = [] }) {
@@ -35,12 +35,12 @@ export default function SalaryChart({ applications = [] }) {
   if (applications.length === 0) return null;
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+    <div className="mb-12 grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-8">
       
       {/* --- PIE CHART: STATUS --- */}
       <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-slate-200 dark:border-zinc-800 shadow-sm">
         <h3 className="font-bold text-lg mb-4 text-slate-700 dark:text-slate-300">Application Status</h3>
-        <div className="h-64 w-full">
+        <div className="h-56 w-full sm:h-64">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
@@ -77,7 +77,7 @@ export default function SalaryChart({ applications = [] }) {
       {/* --- BAR CHART: TOP JOBS --- */}
       <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-slate-200 dark:border-zinc-800 shadow-sm">
         <h3 className="font-bold text-lg mb-4 text-slate-700 dark:text-slate-300">Top Performing Jobs</h3>
-        <div className="h-64 w-full">
+        <div className="h-56 w-full sm:h-64">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={barData} layout="vertical" margin={{ left: 20 }}>
               <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#e2e8f0" />
@@ -85,7 +85,7 @@ export default function SalaryChart({ applications = [] }) {
               <YAxis 
                 type="category" 
                 dataKey="name" 
-                width={100} 
+                width={72} 
                 tick={{ fontSize: 11, fill: '#64748b' }} 
               />
               <Tooltip 

@@ -15,11 +15,15 @@ export default function Home() {
 
   // 1. Check User Role on Mount
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    setMounted(true);
+    const timer = window.setTimeout(() => {
+      const storedUser = localStorage.getItem("user");
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+      }
+      setMounted(true);
+    }, 0);
+
+    return () => window.clearTimeout(timer);
   }, []);
 
   // Prevent hydration mismatch
@@ -87,13 +91,13 @@ function RecruiterHome({ user }) {
       {/* Decorative Background */}
       <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-blue-600/10 to-transparent -z-10"></div>
 
-      <section className="relative pt-24 pb-12 px-6">
+      <section className="relative px-4 pb-12 pt-16 sm:px-6 sm:pt-24">
         <div className="mx-auto max-w-7xl">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center"
+            className="grid grid-cols-1 gap-8 items-center lg:grid-cols-2 lg:gap-12"
           >
             
             {/* Left: Welcome Text */}
@@ -102,14 +106,14 @@ function RecruiterHome({ user }) {
                 <Sparkles size={12} /> Recruiter Dashboard
               </div>
               
-              <h1 className="text-5xl font-extrabold tracking-tight sm:text-6xl mb-4 text-slate-900 dark:text-white">
+              <h1 className="mb-4 text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-5xl lg:text-6xl">
                 {greeting}, <br/>
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">
                   {user.firstName || user.name}
                 </span>
               </h1>
               
-              <p className="text-lg text-slate-600 dark:text-slate-400 mb-8 max-w-lg leading-relaxed">
+              <p className="mb-8 max-w-lg text-base leading-relaxed text-slate-600 dark:text-slate-400 sm:text-lg">
                 Your hiring command center is ready. You have <strong className="text-slate-900 dark:text-white">{stats.activeJobs} active jobs</strong> looking for talent today.
               </p>
 
@@ -132,14 +136,14 @@ function RecruiterHome({ user }) {
             </div>
 
             {/* Right: Live Stats Cards */}
-            <div className="grid grid-cols-2 gap-4 relative">
+            <div className="relative grid grid-cols-1 gap-4 sm:grid-cols-2">
               {/* Blur Glow Effect */}
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-blue-500/10 blur-3xl -z-10 rounded-full"></div>
 
               {/* Card 1: Applicants */}
               <motion.div 
                 whileHover={{ y: -5 }}
-                className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl p-6 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-black/50 border border-white dark:border-zinc-800"
+                className="rounded-3xl border border-white bg-white/80 p-5 shadow-xl shadow-slate-200/50 backdrop-blur-xl dark:border-zinc-800 dark:bg-zinc-900/80 dark:shadow-black/50 sm:p-6"
               >
                 <div className="h-12 w-12 bg-indigo-100 dark:bg-indigo-900/30 rounded-2xl flex items-center justify-center text-indigo-600 mb-4">
                   <Users size={24} />
@@ -158,7 +162,7 @@ function RecruiterHome({ user }) {
               {/* Card 2: Active Jobs */}
               <motion.div 
                 whileHover={{ y: -5 }}
-                className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl p-6 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-black/50 border border-white dark:border-zinc-800 mt-8"
+                className="mt-0 rounded-3xl border border-white bg-white/80 p-5 shadow-xl shadow-slate-200/50 backdrop-blur-xl dark:border-zinc-800 dark:bg-zinc-900/80 dark:shadow-black/50 sm:mt-8 sm:p-6"
               >
                 <div className="h-12 w-12 bg-blue-100 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center text-blue-600 mb-4">
                   <Briefcase size={24} />
@@ -175,7 +179,7 @@ function RecruiterHome({ user }) {
       </section>
 
       {/* Quick Actions Grid */}
-      <section className="py-16 px-6 bg-white dark:bg-zinc-950 border-t border-slate-100 dark:border-zinc-900">
+      <section className="border-t border-slate-100 bg-white px-4 py-16 dark:border-zinc-900 dark:bg-zinc-950 sm:px-6">
         <div className="mx-auto max-w-7xl">
           <h2 className="text-2xl font-bold mb-8 flex items-center gap-2">
             <Sparkles className="text-yellow-500" size={20} /> Quick Actions
@@ -231,7 +235,7 @@ function CandidateHome() {
     <div className="min-h-screen bg-white dark:bg-black text-slate-900 dark:text-slate-200 overflow-x-hidden">
       
       {/* --- HERO SECTION --- */}
-      <section className="relative pt-28 pb-40 px-6 flex flex-col items-center text-center overflow-hidden">
+      <section className="relative flex flex-col items-center overflow-hidden px-4 pb-24 pt-20 text-center sm:px-6 sm:pb-32 sm:pt-28 lg:pb-40">
         {/* Animated Background Mesh */}
         <div className="absolute inset-0 -z-10 h-full w-full bg-white dark:bg-black bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] dark:bg-[radial-gradient(#1f2937_1px,transparent_1px)] [background-size:16px_16px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,#000_70%,transparent_100%)]"></div>
         <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-blue-500/20 rounded-full blur-[128px]"></div>
@@ -242,7 +246,7 @@ function CandidateHome() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-blue-200 dark:border-blue-900 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 text-xs font-bold uppercase tracking-widest mb-8">
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-blue-600 dark:border-blue-900 dark:bg-blue-900/20 dark:text-blue-400 sm:mb-8 sm:text-xs">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
@@ -250,16 +254,16 @@ function CandidateHome() {
             #1 Platform for Tech Jobs
           </div>
 
-          <h1 className="text-6xl md:text-8xl font-extrabold tracking-tight mb-6">
+          <h1 className="mb-6 text-4xl font-extrabold tracking-tight sm:text-6xl md:text-7xl lg:text-8xl">
             Find Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-500">Dream Job.</span> <br />
             <span className="text-slate-900 dark:text-white">Know Your Worth.</span>
           </h1>
           
-          <p className="mt-4 text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed">
+          <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-slate-600 dark:text-slate-400 sm:text-lg lg:text-xl">
             The intelligent platform that matches you with top tech roles, tracks your applications, and predicts your market salary using AI.
           </p>
 
-          <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="mt-10 flex w-full flex-col justify-center gap-4 sm:w-auto sm:flex-row">
             <Link 
               href="/getJob" 
               className="rounded-full bg-blue-600 px-8 py-4 text-base font-bold text-white shadow-xl shadow-blue-600/30 hover:bg-blue-500 hover:scale-105 transition-all active:scale-95"
@@ -267,8 +271,8 @@ function CandidateHome() {
               Browse Openings
             </Link>
             <Link 
-              href="/profile" 
-              className="rounded-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 px-8 py-4 text-base font-bold text-slate-900 dark:text-white hover:bg-slate-50 dark:hover:bg-zinc-800 hover:border-slate-300 transition-all active:scale-95 flex items-center gap-2"
+              href="/model" 
+              className="flex items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-8 py-4 text-base font-bold text-slate-900 transition-all hover:border-slate-300 hover:bg-slate-50 active:scale-95 dark:border-zinc-800 dark:bg-zinc-900 dark:text-white dark:hover:bg-zinc-800"
             >
               <BarChart3 size={18} className="text-purple-500" /> Check Salary Prediction
             </Link>
@@ -278,8 +282,8 @@ function CandidateHome() {
 
       {/* --- STATS STRIP --- */}
       <div className="border-y border-slate-100 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/50 backdrop-blur-sm">
-        <div className="mx-auto max-w-7xl px-6 py-12">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center divide-x divide-slate-200 dark:divide-zinc-800/50">
+        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-12">
+          <div className="grid grid-cols-1 gap-8 text-center md:grid-cols-3 md:divide-x md:divide-slate-200 dark:md:divide-zinc-800/50">
             <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}>
               <dt className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Active Jobs</dt>
               <dd className="mt-2 text-4xl font-black text-slate-900 dark:text-white">1,200+</dd>
@@ -297,19 +301,19 @@ function CandidateHome() {
       </div>
 
       {/* --- FEATURES SECTION --- */}
-      <section className="py-32 px-6 mx-auto max-w-7xl">
-        <div className="text-center mb-20">
+      <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:py-32">
+        <div className="mb-14 text-center sm:mb-20">
           <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-5xl">
             Why choose JobFinder?
           </h2>
-          <p className="mt-4 text-xl text-slate-600 dark:text-slate-400">
-            We don't just list jobs; we engineer your career growth.
+          <p className="mt-4 text-base text-slate-600 dark:text-slate-400 sm:text-xl">
+            We do not just list jobs; we engineer your career growth.
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Feature 1 */}
-          <Link href={'/resume-matcher'}className="group p-10 rounded-[2.5rem] bg-slate-50 dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800 hover:border-blue-500 dark:hover:border-blue-500 transition-colors">
+          <Link href={'/resume-matcher'}className="group rounded-[2.5rem] border border-slate-100 bg-slate-50 p-8 transition-colors hover:border-blue-500 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-blue-500 sm:p-10">
             <div className="w-14 h-14 bg-blue-600 text-white rounded-2xl flex items-center justify-center mb-6 text-2xl shadow-lg shadow-blue-600/20 group-hover:scale-110 transition-transform">
               <Book />
             </div>
@@ -321,7 +325,7 @@ function CandidateHome() {
           </Link>
 
           {/* Feature 2: ML Model Highlight */}
-          <Link href={'/model'} className="group p-10 rounded-[2.5rem] bg-slate-900 dark:bg-zinc-800 text-white border border-slate-800 dark:border-zinc-700 relative overflow-hidden">
+          <Link href={'/model'} className="group relative overflow-hidden rounded-[2.5rem] border border-slate-800 bg-slate-900 p-8 text-white dark:border-zinc-700 dark:bg-zinc-800 sm:p-10">
             <div className="absolute top-0 right-0 bg-gradient-to-l from-purple-600 to-blue-600 text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl uppercase tracking-widest">
               AI Powered
             </div>
@@ -335,7 +339,7 @@ function CandidateHome() {
           </Link>
 
           {/* Feature 3 */}
-          <div className="group p-10 rounded-[2.5rem] bg-slate-50 dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800 hover:border-green-500 dark:hover:border-green-500 transition-colors">
+          <div className="group rounded-[2.5rem] border border-slate-100 bg-slate-50 p-8 transition-colors hover:border-green-500 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-green-500 sm:p-10">
             <div className="w-14 h-14 bg-green-600 text-white rounded-2xl flex items-center justify-center mb-6 text-2xl shadow-lg shadow-green-600/20 group-hover:scale-110 transition-transform">
                <ArrowRight />
             </div>
@@ -348,13 +352,13 @@ function CandidateHome() {
       </section>
 
       {/* --- RECRUITER CTA --- */}
-      <section className="py-24 px-6 bg-black text-white relative overflow-hidden">
+      <section className="relative overflow-hidden bg-black px-4 py-20 text-white sm:px-6 sm:py-24">
         <div className="absolute top-0 left-0 w-full h-full bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
         <div className="mx-auto max-w-4xl text-center relative z-10">
-          <h2 className="text-4xl font-bold tracking-tight sm:text-5xl mb-6">
+          <h2 className="mb-6 text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
             Hiring? Find your next star.
           </h2>
-          <p className="text-xl text-slate-400 mb-10 max-w-2xl mx-auto">
+          <p className="mx-auto mb-10 max-w-2xl text-base text-slate-400 sm:text-xl">
             Access our database of qualified candidates, post jobs for free, and streamline your entire hiring process.
           </p>
           <Link 

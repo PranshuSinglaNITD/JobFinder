@@ -151,7 +151,7 @@ export default function RecruiterProfile() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-black py-10 px-4 font-sans text-slate-900 dark:text-slate-200">
+    <div className="min-h-screen bg-slate-50 dark:bg-black py-8 px-4 font-sans text-slate-900 dark:text-slate-200 sm:py-10">
       <div className="max-w-5xl mx-auto">
 
         {/* Header */}
@@ -165,7 +165,8 @@ export default function RecruiterProfile() {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
 
           {/* Sidebar Tabs */}
-          <div className="lg:col-span-1 space-y-2">
+          <div className="lg:col-span-1">
+            <div className="flex gap-2 overflow-x-auto pb-1 lg:block lg:space-y-2 lg:overflow-visible">
             {[
               { id: "general", label: "General", icon: User },
               { id: "company", label: "Company Info", icon: Briefcase },
@@ -174,7 +175,7 @@ export default function RecruiterProfile() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all ${activeTab === tab.id
+                className={`flex shrink-0 items-center gap-3 rounded-xl px-4 py-3 font-medium transition-all lg:w-full ${activeTab === tab.id
                     ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20"
                     : "bg-white dark:bg-zinc-900 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-zinc-800"
                   }`}
@@ -183,6 +184,7 @@ export default function RecruiterProfile() {
                 {tab.label}
               </button>
             ))}
+            </div>
           </div>
 
           {/* Main Content Area */}
@@ -209,7 +211,7 @@ export default function RecruiterProfile() {
               {activeTab === "general" && (
                 <form onSubmit={handleSaveProfile} className="space-y-6">
                   {/* Avatar Upload */}
-                  <div className="flex items-center gap-6">
+                  <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:gap-6">
                     <div className="relative group">
                       <div className="h-24 w-24 rounded-full bg-slate-200 dark:bg-zinc-800 flex items-center justify-center overflow-hidden border-4 border-white dark:border-zinc-900 shadow-md">
                         {formData.picturePath ? (
@@ -256,8 +258,8 @@ export default function RecruiterProfile() {
                     </div>
                   </div>
 
-                  <div className="flex justify-end pt-4">
-                    <button type="submit" disabled={loading} className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-lg font-semibold shadow-lg shadow-blue-600/20 flex items-center gap-2 disabled:opacity-50">
+                  <div className="flex justify-stretch pt-4 sm:justify-end">
+                    <button type="submit" disabled={loading} className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-6 py-2.5 font-semibold text-white shadow-lg shadow-blue-600/20 disabled:opacity-50 hover:bg-blue-500 sm:w-auto">
                       {loading ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
                       Save Changes
                     </button>
@@ -283,8 +285,8 @@ export default function RecruiterProfile() {
                     <label className="block text-sm font-medium mb-1.5">Description</label>
                     <textarea rows={4} name="companyDescription" placeholder="Tell us about your company..." value={formData.companyDescription} onChange={handleChange} className="w-full px-4 py-2.5 rounded-lg bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 focus:ring-2 focus:ring-blue-500 outline-none resize-none" />
                   </div>
-                  <div className="flex justify-end pt-4">
-                    <button type="submit" disabled={loading} className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-lg font-semibold shadow-lg shadow-blue-600/20 flex items-center gap-2 disabled:opacity-50">
+                  <div className="flex justify-stretch pt-4 sm:justify-end">
+                    <button type="submit" disabled={loading} className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-6 py-2.5 font-semibold text-white shadow-lg shadow-blue-600/20 disabled:opacity-50 hover:bg-blue-500 sm:w-auto">
                       {loading ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
                       Save Company Info
                     </button>
@@ -309,8 +311,8 @@ export default function RecruiterProfile() {
                       <input type="password" name="confirmPassword" required value={formData.confirmPassword} onChange={handleChange} className="w-full px-4 py-2.5 rounded-lg bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 focus:ring-2 focus:ring-blue-500 outline-none" />
                     </div>
                   </div>
-                  <div className="flex justify-end pt-4">
-                    <button type="submit" disabled={loading} className="bg-red-600 hover:bg-red-500 text-white px-6 py-2.5 rounded-lg font-semibold shadow-lg shadow-red-600/20 flex items-center gap-2 disabled:opacity-50">
+                  <div className="flex justify-stretch pt-4 sm:justify-end">
+                    <button type="submit" disabled={loading} className="flex w-full items-center justify-center gap-2 rounded-lg bg-red-600 px-6 py-2.5 font-semibold text-white shadow-lg shadow-red-600/20 disabled:opacity-50 hover:bg-red-500 sm:w-auto">
                       {loading ? <Loader2 className="animate-spin" size={18} /> : <Lock size={18} />}
                       Update Password
                     </button>

@@ -150,10 +150,10 @@ export default function JobDetailsPage() {
         <div className="min-h-screen bg-slate-50 dark:bg-black font-sans text-slate-900 dark:text-slate-100 pb-20">
 
             {/* HERO BANNER */}
-            <div className="h-64 bg-linear-to-r from-blue-900 via-indigo-900 to-slate-900 relative overflow-hidden">
+            <div className="relative h-48 overflow-hidden bg-linear-to-r from-blue-900 via-indigo-900 to-slate-900 sm:h-56 lg:h-64">
                 <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 animate-pulse"></div>
-                <div className="max-w-7xl mx-auto px-6 h-full flex items-center relative z-10">
-                    <button onClick={() => router.back()} className="text-white/80 hover:text-white flex items-center gap-2 transition-all hover:-translate-x-1 group">
+                <div className="relative z-10 mx-auto flex h-full max-w-7xl items-center px-4 sm:px-6">
+                    <button onClick={() => router.back()} className="group flex items-center gap-2 text-sm text-white/80 transition-all hover:-translate-x-1 hover:text-white sm:text-base">
                         <ChevronLeft className="group-hover:scale-110 transition-transform" /> Back to Jobs
                     </button>
                 </div>
@@ -169,11 +169,11 @@ export default function JobDetailsPage() {
                         <motion.div
                             initial={{ y: 20, opacity: 0 }}
                             animate={{ y: 0, opacity: 1 }}
-                            className="bg-white dark:bg-zinc-900 rounded-2xl p-8 shadow-xl shadow-slate-200/50 dark:shadow-black/50 border border-slate-200 dark:border-zinc-800"
+                            className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xl shadow-slate-200/50 dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-black/50 sm:p-8"
                         >
-                            <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
+                            <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
                                 <div>
-                                    <h1 className="text-3xl font-extrabold mb-3 text-slate-900 dark:text-white">{job.title}</h1>
+                                    <h1 className="mb-3 text-2xl font-extrabold text-slate-900 dark:text-white sm:text-3xl">{job.title}</h1>
                                     <div className="flex flex-wrap items-center gap-4 text-slate-500 dark:text-slate-400 text-sm font-medium">
                                         <span className="flex items-center gap-1.5"><Building size={16} className="text-blue-500" /> {job.company.name}</span>
                                         <span className="flex items-center gap-1.5"><MapPin size={16} className="text-red-500" /> {job.location}</span>
@@ -181,9 +181,9 @@ export default function JobDetailsPage() {
                                     </div>
                                 </div>
                                 {job.company.logo ? (
-                                    <img src={job.company.logo} alt="Logo" className="w-20 h-20 rounded-xl object-cover border-2 border-slate-100 dark:border-zinc-800 shadow-sm" />
+                                    <img src={job.company.logo} alt="Logo" className="h-16 w-16 rounded-xl border-2 border-slate-100 object-cover shadow-sm dark:border-zinc-800 sm:h-20 sm:w-20" />
                                 ) : (
-                                    <div className="w-20 h-20 rounded-xl bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-2xl font-bold shadow-lg">
+                                    <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-linear-to-br from-blue-500 to-indigo-600 text-xl font-bold text-white shadow-lg sm:h-20 sm:w-20 sm:text-2xl">
                                         {job.company.name.charAt(0)}
                                     </div>
                                 )}
@@ -203,7 +203,7 @@ export default function JobDetailsPage() {
                             initial={{ y: 20, opacity: 0 }}
                             animate={{ y: 0, opacity: 1 }}
                             transition={{ delay: 0.1 }}
-                            className="bg-white dark:bg-zinc-900 rounded-2xl p-8 shadow-sm border border-slate-200 dark:border-zinc-800"
+                            className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 sm:p-8"
                         >
                             <h2 className="text-xl font-bold mb-4 flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800 pb-3">
                                 <Briefcase className="text-blue-600" size={20} />
@@ -240,11 +240,11 @@ export default function JobDetailsPage() {
                             initial={{ x: 20, opacity: 0 }}
                             animate={{ x: 0, opacity: 1 }}
                             transition={{ delay: 0.2 }}
-                            className="bg-white dark:bg-zinc-900 rounded-2xl p-6 shadow-xl shadow-blue-900/5 border border-slate-200 dark:border-zinc-800 sticky top-24"
+                            className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xl shadow-blue-900/5 dark:border-zinc-800 dark:bg-zinc-900 sm:p-6 lg:sticky lg:top-24"
                         >
                             <div className="mb-6">
                                 <h3 className="font-bold text-lg text-slate-900 dark:text-white">Apply Now</h3>
-                                <Link href={`/recruiter/${job.userId}`}>
+                                <Link href={`/recruiter/${job.userId}`} className="inline-block">
                                     <button className="text-blue-600 font-medium hover:underline cursor-pointer">
                                         View Recruiter Profile
                                     </button>
@@ -282,7 +282,7 @@ export default function JobDetailsPage() {
                                                 onDragOver={handleDragOver}
                                                 onDragLeave={handleDragLeave}
                                                 onDrop={handleDrop}
-                                                className={`relative group border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200 cursor-pointer
+                                                className={`relative group cursor-pointer rounded-xl border-2 border-dashed p-6 text-center transition-all duration-200 sm:p-8
                                             ${isDragging
                                                         ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 scale-[1.02]"
                                                         : "border-slate-300 dark:border-zinc-700 hover:border-blue-400 hover:bg-slate-50 dark:hover:bg-zinc-800"
@@ -336,7 +336,7 @@ export default function JobDetailsPage() {
                                     <button
                                         onClick={handleApply}
                                         disabled={applying || !resume}
-                                        className="w-full py-4 rounded-xl bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-lg shadow-lg shadow-blue-600/30 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none flex items-center justify-center gap-2"
+                                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-linear-to-r from-blue-600 to-indigo-600 py-4 text-base font-bold text-white shadow-lg shadow-blue-600/30 transition-all hover:from-blue-700 hover:to-indigo-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none sm:text-lg"
                                     >
                                         {applying ? (
                                             <>
@@ -364,7 +364,7 @@ export default function JobDetailsPage() {
                                 <div>
                                     <p className="font-bold text-slate-900 dark:text-white">{job.company.name}</p>
                                     {job.company.website && (
-                                        <a href={job.company.website} target="_blank" className="text-xs text-blue-600 hover:underline flex items-center gap-1">
+                                        <a href={job.company.website} target="_blank" className="flex items-center gap-1 break-all text-xs text-blue-600 hover:underline">
                                             <Globe size={10} /> {job.company.website.replace(/^https?:\/\//, '')}
                                         </a>
                                     )}

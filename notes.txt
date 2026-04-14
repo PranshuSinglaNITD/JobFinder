@@ -1,0 +1,1 @@
+request.params means like in node we are talking like reuqest.params.username so the route would be like /api/:username means username is dyanamic

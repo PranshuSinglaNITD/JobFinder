@@ -51,12 +51,16 @@ const userSchema = new mongoose.Schema(
       twitter: { type: String, default: "" },
       portfolio: { type: String, default: "" },
     },
-    // You can keep a separate profile object for deeper details if you want,
-    // but ensure your update logic handles it.
     skills: { type: Array, default: [] },
+    resumeText: { type: String, default: "" }, 
+    isSearchable: { type: Boolean, default: true }
   },
   { timestamps: true }
 );
+
+//this allows mongodb to search through 1000 of resumes in ms 
+//could be asked in interview HOW??
+userSchema.index({ skills: 'text', resumeText: 'text', occupation: 'text' });
 
 const User = mongoose.models.User || mongoose.model("User", userSchema);
 

@@ -45,7 +45,7 @@ export default function FindJobsPage() {
     <div className="min-h-screen bg-slate-50 dark:bg-black font-sans text-slate-900 dark:text-slate-100">
       
       {/* --- HERO / SEARCH SECTION --- */}
-      <div className="bg-white dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800 pt-12 pb-10 px-4 sm:px-6 lg:px-8">
+      <div className="bg-white dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800 px-4 pb-8 pt-10 sm:px-6 sm:pb-10 sm:pt-12 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl mb-4">
             Find your next <span className="text-blue-600">ADVENTURE</span>.
@@ -60,7 +60,7 @@ export default function FindJobsPage() {
             </div>
             <input
               type="text"
-              className="block w-full pl-11 pr-4 py-4 rounded-full border border-slate-200 dark:border-zinc-700 bg-slate-50 dark:bg-black text-lg placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none shadow-sm transition-all"
+              className="block w-full rounded-3xl border border-slate-200 bg-slate-50 py-3.5 pl-11 pr-4 text-base placeholder-slate-400 shadow-sm transition-all outline-none focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-black sm:rounded-full sm:py-4 sm:text-lg"
               placeholder="Search by job title, company, or keywords..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -95,13 +95,13 @@ export default function FindJobsPage() {
            </div>
         ) : filteredJobs.length > 0 ? (
           <>
-            <div className="mb-6 flex items-center justify-between">
+            <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                <h2 className="text-lg font-semibold flex items-center gap-2">
                  <Briefcase size={20} className="text-blue-600" />
                  {filteredJobs.length} Jobs Found
                </h2>
                <div className="text-sm text-slate-500">
-                 Showing results for <span className="font-medium text-slate-900 dark:text-white">"{filterType}"</span>
+                 Showing results for <span className="font-medium text-slate-900 dark:text-white">&quot;{filterType}&quot;</span>
                </div>
             </div>
             

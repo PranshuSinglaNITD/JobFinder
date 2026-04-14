@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {signIn,useSession} from 'next-auth/react'
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -47,7 +46,7 @@ export default function AuthForm({ initialView = "login" }) {
         if (user) {
             router.replace("/");
         }
-    }, []);
+    }, [router]);
 
     const [isLoginView, setIsLoginView] = useState(initialView === "login");
     const [role, setRole] = useState("candidate");
@@ -193,10 +192,10 @@ export default function AuthForm({ initialView = "login" }) {
             />
 
             {/* --- LEFT SIDE: THE FORM (Clean & Focused) --- */}
-            <div className="w-full lg:w-1/2 flex flex-col justify-center p-8 sm:p-12 lg:p-24 bg-white dark:bg-zinc-950 relative z-10">
+            <div className="relative z-10 flex w-full flex-col justify-center bg-white px-5 pb-10 pt-28 dark:bg-zinc-950 sm:px-8 sm:pb-12 sm:pt-32 lg:w-1/2 lg:p-24">
 
                 {/* Logo */}
-                <div className="absolute top-8 left-8 sm:left-12">
+                <div className="absolute top-6 left-5 sm:left-8 lg:left-12">
                     <Link href="/" className="flex items-center gap-2 text-2xl font-bold tracking-tighter text-blue-600 dark:text-white">
                         <div className="p-1.5 bg-blue-600 rounded-lg text-white">
                             <Briefcase size={20} fill="currentColor" />
@@ -231,7 +230,7 @@ export default function AuthForm({ initialView = "login" }) {
 
                                 {/* ROLE SELECTOR (Register Only) */}
                                 {!isLoginView && (
-                                    <div className="grid grid-cols-2 gap-3 mb-6">
+                                    <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
                                         {["candidate", "recruiter"].map((r) => (
                                             <button
                                                 key={r}
@@ -295,7 +294,7 @@ export default function AuthForm({ initialView = "login" }) {
 
                             </form>
 
-                            <p className="mt-8 text-center text-slate-500 dark:text-slate-400 text-sm">
+                            <div className="mt-8 text-center text-sm text-slate-500 dark:text-slate-400">
                                 {isLoginView ? "Don't have an account?" : "Already have an account?"} {' '}
                                 <button
                                     onClick={() => setIsLoginView(!isLoginView)}
@@ -306,7 +305,7 @@ export default function AuthForm({ initialView = "login" }) {
                                 <div className="mt-2">
                                     <SignInBtn/>
                                 </div>
-                            </p>
+                            </div>
                         </motion.div>
                     </AnimatePresence>
                 </div>
@@ -336,7 +335,7 @@ export default function AuthForm({ initialView = "login" }) {
                             {[1, 2, 3, 4, 5].map(i => <Star key={i} size={16} fill="currentColor" />)}
                         </div>
                         <blockquote className="text-xl font-medium leading-relaxed mb-6">
-                            "JobFinder helped us scale our engineering team by 50% in just two months. The quality of candidates is unmatched."
+                            &ldquo;JobFinder helped us scale our engineering team by 50% in just two months. The quality of candidates is unmatched.&rdquo;
                         </blockquote>
                         <div className="flex items-center gap-4">
                             <div className="w-12 h-12 rounded-full bg-linear-to-br from-blue-400 to-cyan-300"></div>
