@@ -49,4 +49,3 @@ y_pred2=rig_reg.predict(X_test)
 with open('model.pkl','wb') as f:
     pickle.dump(lin_reg,f)
 print('Models saved')
-#%%
