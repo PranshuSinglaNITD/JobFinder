@@ -6,6 +6,7 @@ import Chat from "@/models/Chat";
 export async function POST(req) {
   try {
     await connectDb();
+    const PYTHON_URL = process.env.PYTHON_API_URL || "http://127.0.0.1:8000";
     
     // 1. Receive the perfect data from your React frontend
     const { chatId, userId, userName, message, resumeText } = await req.json();
@@ -39,7 +40,7 @@ export async function POST(req) {
     await chat.save(); // We must save here so a brand new chat gets an _id !
 
     // 5. Send payload to Python LangGraph
-    const pythonResponse = await fetch("http://localhost:8000/api/jobbot", {
+    const pythonResponse = await fetch(`${PYTHON_URL}/api/jobbot`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

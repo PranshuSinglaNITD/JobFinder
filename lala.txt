@@ -7,6 +7,9 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
+const PYTHON_URL =
+  process.env.NEXT_PUBLIC_PYTHON_API_URL || "http://127.0.0.1:8000";
+
 // Animation Variants
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -37,7 +40,7 @@ export default function SalaryPrediction() {
   useEffect(() => {
     const fetchMetadata = async () => {
       try {
-        const res = await fetch("http://localhost:8000/api/meta");
+        const res = await fetch(`${PYTHON_URL}/api/meta`);
         if (!res.ok) throw new Error("Failed to connect to ML Server");
         
         const data = await res.json();
@@ -77,7 +80,7 @@ export default function SalaryPrediction() {
     setError("");
 
     try {
-      const res = await fetch("http://localhost:8000/api/predict", {
+      const res = await fetch(`${PYTHON_URL}/api/predict`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData)

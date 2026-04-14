@@ -7,6 +7,9 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
+const PYTHON_URL =
+  process.env.NEXT_PUBLIC_PYTHON_API_URL || "http://127.0.0.1:8000";
+
 export default function ResumeMatcher() {
   const [file, setFile] = useState(null);
   const [jobDesc, setJobDesc] = useState("");
@@ -27,7 +30,7 @@ export default function ResumeMatcher() {
     formData.append("jobDesc", jobDesc);
 
     try {
-      const res = await fetch("http://localhost:8000/api/match-resume", {
+      const res = await fetch(`${PYTHON_URL}/api/match-resume`, {
         method: "POST",
         body: formData,
       });
