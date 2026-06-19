@@ -1,14 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react"; 
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Image as ImageIcon, Send, X, FileText, Loader2,
   Heart, MessageCircle, Share2, MoreHorizontal
 } from "lucide-react";
-import { Bounce,toast,ToastContainer } from "react-toastify";
+import { Bounce, toast, ToastContainer } from "react-toastify";
 
-// --- ANIMATION VARIANTS ---
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -28,20 +28,26 @@ const postVariants = {
 };
 
 export default function FeedPage() {
+  // 1. Initialize NextAuth Session
+  const { data: session, status } = useSession(); 
+  const user=session?.user
+
+  // 2. State Management
   const [posts, setPosts] = useState([]);
   const [content, setContent] = useState("");
   const [file, setFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [user, setUser] = useState(null);
   const [initialFetchDone, setInitialFetchDone] = useState(false);
 
-  // 1. Fetch Posts (LOGIC PRESERVED)
-  const fetchPosts = async (currentUser) => {
+  // 3. Fetch Posts Logic
+  const fetchPosts = async () => {
     try {
       let url = "/api/posts/get";
-      if (currentUser && currentUser.role === "recruiter") {
-        url = `/api/posts/get?userId=${currentUser._id}`;
+      
+      // If user is a recruiter, fetch specific posts (adjust based on your API logic)
+      if (session?.user?.role === "recruiter") {
+        url = `/api/posts/get?userId=${session.user.id}`;
       }
 
       const res = await fetch(url);
@@ -61,19 +67,15 @@ export default function FeedPage() {
     }
   };
 
-  // 2. Load User & Fetch Feed (LOGIC PRESERVED)
+  // 4. Trigger Fetch when Session is Ready
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    let parsedUser = null;
-
-    if (storedUser) {
-      parsedUser = JSON.parse(storedUser);
-      setUser(parsedUser);
+    // Only attempt to fetch posts once NextAuth finishes loading the session state
+    if (status !== "loading") {
+      fetchPosts();
     }
-    fetchPosts(parsedUser);
-  }, []);
+  }, [status]); 
 
-  // 3. Handle File Selection (LOGIC PRESERVED)
+  // 5. File Handling Logic
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (!selectedFile) return;
@@ -92,13 +94,15 @@ export default function FeedPage() {
     setPreviewUrl(null);
   };
 
-  // 4. Submit Post (LOGIC PRESERVED)
+  // 6. Post Submission Logic
   const handlePost = async (e) => {
     e.preventDefault();
+    
+    // Prevent empty posts
     if (!content && !file) return;
 
-    const token = localStorage.getItem("token");
-    if (!user || !token) {
+    // Verify NextAuth session exists instead of checking local storage
+    if (!session || !session.user) {
       alert("Please log in first");
       return;
     }
@@ -107,7 +111,8 @@ export default function FeedPage() {
 
     try {
       const formData = new FormData();
-      formData.append("userId", user._id);
+      // Use the MongoDB ID directly from the NextAuth cookie
+      formData.append("userId", session.user.id); 
       formData.append("description", content);
 
       if (file) {
@@ -133,10 +138,13 @@ export default function FeedPage() {
           theme: "dark",
           transition: Bounce,
         });
+        
+        // Add post to UI immediately using session data for the author profile
         const newPostForDisplay = {
           ...data.post,
-          author: user
+          author: session.user 
         };
+        
         setPosts((prevPosts) => [newPostForDisplay, ...prevPosts]);
         setContent("");
         removeFile();
