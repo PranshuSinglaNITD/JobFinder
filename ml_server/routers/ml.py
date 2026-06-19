@@ -76,7 +76,7 @@ async def matchResume(resume: UploadFile = File(...), jobDesc: str = Form(...)):
         JOB DESCRIPTION:\n{jobDesc}\n\nRESUME:\n{resumeText}
         """
         response = client.models.generate_content(
-            model='gemini-1.5-flash',
+            model='gemini-2.5-flash',
             contents=prompt,
             config=types.GenerateContentConfig(
                 response_mime_type="application/json",
@@ -117,7 +117,7 @@ async def rank_candidates(req: CandidateBatchRequest):
             """
             
             response = client.models.generate_content(
-                model='gemini-1.5-flash',
+                model='gemini-2.5-flash',
                 contents=prompt,
                 config=types.GenerateContentConfig(
                     response_mime_type="application/json",
