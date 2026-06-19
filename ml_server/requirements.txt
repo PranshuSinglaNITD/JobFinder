@@ -2,7 +2,7 @@ fastapi
 uvicorn
 python-multipart
 pandas
-scikit-learn
+scikit-learn==1.7.1
 google-genai
 langgraph
 langchain-core
