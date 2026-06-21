@@ -8,6 +8,8 @@ from google import genai
 from dotenv import load_dotenv
 from google.genai import types
 from utils.text_parser import extract_text
+import numpy as np
+from sklearn.metrics.pairwise import cosine_similarity
 
 load_dotenv()
 # Initialize the router ONLY ONCE at the top
@@ -106,13 +108,38 @@ class CandidateBatchRequest(BaseModel):
 @router.post("/api/rank-candidates")
 async def rank_candidates(req: CandidateBatchRequest):
     try:
-        ranked_results = []
+        if not req.candidates:
+            return {"suggestions": []}
+
+        job_embedding_res = client.models.embed_content(
+            model='text-embedding-004',
+            contents=req.job_description
+        )
+        job_vector = np.array(job_embedding_res.embeddings[0].values).reshape(1, -1)
+
+        #We truncate to 5000 chars to stay within safe embedding token limits
+        resume_texts = [cand['resumeText'][:5000] for cand in req.candidates]
         
-        for candidate in req.candidates:
+        candidates_embed_res = client.models.embed_content(
+            model='text-embedding-004',
+            contents=resume_texts
+        )
+        candidate_vectors = np.array([e.values for e in candidates_embed_res.embeddings])
+
+        similarity_scores = cosine_similarity(job_vector, candidate_vectors)[0]
+
+        top_k = min(5, len(req.candidates))
+        top_indices = similarity_scores.argsort()[-top_k:][::-1]
+
+        ranked_results = []
+        for idx in top_indices:
+            candidate = req.candidates[idx]
+            
+            base_score = int(similarity_scores[idx] * 100)
+
             prompt = f"""
-            Analyze the RESUME against the JOB DESCRIPTION.
-            1. Calculate a match score from 0 to 100.
-            2. Write a 1-sentence summary of why they are a good fit.
+            You are a technical recruiter. Write a highly concise, 1-sentence summary 
+            of why this candidate is a good fit for the job based on their resume.
             JOB DESCRIPTION:\n{req.job_description}\n\nRESUME:\n{candidate['resumeText']}
             """
             
@@ -120,14 +147,14 @@ async def rank_candidates(req: CandidateBatchRequest):
                 model='gemini-2.5-flash',
                 contents=prompt,
                 config=types.GenerateContentConfig(
+                    api_version="v1alpha", 
                     response_mime_type="application/json",
                     response_schema={
                         "type": "OBJECT",
                         "properties": {
-                            "score": {"type": "INTEGER"},
                             "summary": {"type": "STRING"}
                         },
-                        "required": ["score", "summary"]
+                        "required": ["summary"]
                     }
                 ),
             )
@@ -136,11 +163,10 @@ async def rank_candidates(req: CandidateBatchRequest):
             ranked_results.append({
                 "candidateId": candidate["id"],
                 "name": candidate["name"],
-                "matchScore": ai_result.get("score", 0),
-                "aiSummary": ai_result.get("summary", "")
+                "matchScore": base_score, #use vector score
+                "aiSummary": ai_result.get("summary", "Strong match based on semantic search.")
             })
             
-        ranked_results.sort(key=lambda x: x['matchScore'], reverse=True)
         return {"suggestions": ranked_results}
         
     except Exception as e:
