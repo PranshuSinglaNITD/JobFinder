@@ -3,6 +3,7 @@ from fastapi import APIRouter, File, UploadFile, Form, HTTPException
 import pandas as pd
 import pickle
 import json
+import boto3
 import os
 from google import genai
 from dotenv import load_dotenv
@@ -101,77 +102,45 @@ async def matchResume(resume: UploadFile = File(...), jobDesc: str = Form(...)):
         print(f"❌ ML PREDICTION CRASHED: {str(e)}")
         return {"error": "An internal server error occurred while analyzing the resume."}
     
+
+sqs = boto3.client(
+    'sqs',
+    aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
+    aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
+    region_name=os.getenv('AWS_REGION', 'us-east-1')
+)
+QUEUE_URL = os.getenv('SQS_QUEUE_URL')
 class CandidateBatchRequest(BaseModel):
+    job_id: str
     job_description: str
     candidates: list[dict] 
 
 @router.post("/api/rank-candidates")
-async def rank_candidates(req: CandidateBatchRequest):
+async def rank_candidates_async(req: CandidateBatchRequest):
     try:
-        if not req.candidates:
-            return {"suggestions": []}
+        # 1. Package the workload into a stringified JSON payload
+        message_body = json.dumps({
+            "job_id": req.job_id,
+            "job_description": req.job_description,
+            "candidates": req.candidates
+        })
 
-        job_embedding_res = client.models.embed_content(
-            model='text-embedding-004',
-            contents=req.job_description
+        # 2. Send to AWS SQS
+        response = sqs.send_message(
+            QueueUrl=QUEUE_URL,
+            MessageBody=message_body
         )
-        job_vector = np.array(job_embedding_res.embeddings[0].values).reshape(1, -1)
 
-        #We truncate to 5000 chars to stay within safe embedding token limits
-        resume_texts = [cand['resumeText'][:5000] for cand in req.candidates]
-        
-        candidates_embed_res = client.models.embed_content(
-            model='text-embedding-004',
-            contents=resume_texts
-        )
-        candidate_vectors = np.array([e.values for e in candidates_embed_res.embeddings])
+        # 3. Instantly return a success response to the frontend
+        return {
+            "status": "queued",
+            "message": "AI ranking job successfully added to the queue.",
+            "message_id": response.get('MessageId')
+        }
 
-        similarity_scores = cosine_similarity(job_vector, candidate_vectors)[0]
-
-        top_k = min(5, len(req.candidates))
-        top_indices = similarity_scores.argsort()[-top_k:][::-1]
-
-        ranked_results = []
-        for idx in top_indices:
-            candidate = req.candidates[idx]
-            
-            base_score = int(similarity_scores[idx] * 100)
-
-            prompt = f"""
-            You are a technical recruiter. Write a highly concise, 1-sentence summary 
-            of why this candidate is a good fit for the job based on their resume.
-            JOB DESCRIPTION:\n{req.job_description}\n\nRESUME:\n{candidate['resumeText']}
-            """
-            
-            response = client.models.generate_content(
-                model='gemini-2.5-flash',
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    api_version="v1alpha", 
-                    response_mime_type="application/json",
-                    response_schema={
-                        "type": "OBJECT",
-                        "properties": {
-                            "summary": {"type": "STRING"}
-                        },
-                        "required": ["summary"]
-                    }
-                ),
-            )
-            ai_result = json.loads(response.text)
-            
-            ranked_results.append({
-                "candidateId": candidate["id"],
-                "name": candidate["name"],
-                "matchScore": base_score, #use vector score
-                "aiSummary": ai_result.get("summary", "Strong match based on semantic search.")
-            })
-            
-        return {"suggestions": ranked_results}
-        
     except Exception as e:
-        print(f"Ranking Error: {e}")
-        raise HTTPException(status_code=500, detail="Error ranking candidates") 
+        print(f"SQS Error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to queue job")
 
 @router.post('/api/extract-text')
 async def extract_resume_text(file: UploadFile = File(...)):

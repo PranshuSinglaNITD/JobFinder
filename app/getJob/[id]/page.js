@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import {
     MapPin, Building, Banknote, Clock, Globe,
     CheckCircle, Briefcase, ChevronLeft, Loader2,
-    UploadCloud, FileText, X, AlertCircle
+    UploadCloud, FileText, X, AlertCircle, XCircle
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from 'next/link'
@@ -76,13 +76,11 @@ export default function JobDetailsPage() {
     };
 
     const validateAndSetFile = (file) => {
-        // 1. Check Type
         const validTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
         if (!validTypes.includes(file.type)) {
             alert("Invalid file type. Please upload a PDF or Word document.");
             return;
         }
-        // 2. Check Size (Max 5MB)
         if (file.size > 5 * 1024 * 1024) {
             alert("File is too large. Max size is 5MB.");
             return;
@@ -95,7 +93,7 @@ export default function JobDetailsPage() {
         if (fileInputRef.current) fileInputRef.current.value = "";
     };
 
-    // --- APPLY HANDLER (Using FormData) ---
+    // --- APPLY HANDLER ---
     const handleApply = async () => {
         const user = JSON.parse(localStorage.getItem("user"));
         if (!user) {
@@ -138,6 +136,24 @@ export default function JobDetailsPage() {
         }
     };
 
+    // --- EXPIRATION LOGIC HELPER ---
+    const getJobStatus = (expiresAt, isActive) => {
+        if (isActive === false) return { text: "Closed", color: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400", icon: XCircle, disabled: true };
+        if (!expiresAt) return { text: "Active", color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400", icon: CheckCircle, disabled: false };
+
+        const now = new Date();
+        const expiration = new Date(expiresAt);
+        const hoursLeft = (expiration - now) / (1000 * 60 * 60);
+
+        if (hoursLeft <= 0) {
+            return { text: "Expired", color: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400", icon: AlertCircle, disabled: true };
+        } else if (hoursLeft <= 48) {
+            return { text: "Closing Soon", color: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 animate-pulse", icon: Clock, disabled: false };
+        } else {
+            return { text: "Active", color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400", icon: CheckCircle, disabled: false };
+        }
+    };
+
     if (loading) return (
         <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-black">
             <Loader2 className="w-10 h-10 animate-spin text-blue-600" />
@@ -146,11 +162,15 @@ export default function JobDetailsPage() {
 
     if (!job) return <div className="p-10 text-center">Job not found.</div>;
 
+    const status = getJobStatus(job.expiresAt, job.isActive);
+    const StatusIcon = status.icon;
+    const isClosed = status.disabled;
+
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-black font-sans text-slate-900 dark:text-slate-100 pb-20">
 
             {/* HERO BANNER */}
-            <div className="relative h-48 overflow-hidden bg-linear-to-r from-blue-900 via-indigo-900 to-slate-900 sm:h-56 lg:h-64">
+            <div className="relative h-48 overflow-hidden bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 sm:h-56 lg:h-64">
                 <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 animate-pulse"></div>
                 <div className="relative z-10 mx-auto flex h-full max-w-7xl items-center px-4 sm:px-6">
                     <button onClick={() => router.back()} className="group flex items-center gap-2 text-sm text-white/80 transition-all hover:-translate-x-1 hover:text-white sm:text-base">
@@ -173,7 +193,14 @@ export default function JobDetailsPage() {
                         >
                             <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
                                 <div>
-                                    <h1 className="mb-3 text-2xl font-extrabold text-slate-900 dark:text-white sm:text-3xl">{job.title}</h1>
+                                    <div className="flex items-center gap-3 mb-3">
+                                        <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white sm:text-3xl">{job.title}</h1>
+                                        {/* Dynamic Expiration Badge */}
+                                        <span className={`flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold ${status.color}`}>
+                                            <StatusIcon size={14} />
+                                            {status.text}
+                                        </span>
+                                    </div>
                                     <div className="flex flex-wrap items-center gap-4 text-slate-500 dark:text-slate-400 text-sm font-medium">
                                         <span className="flex items-center gap-1.5"><Building size={16} className="text-blue-500" /> {job.company.name}</span>
                                         <span className="flex items-center gap-1.5"><MapPin size={16} className="text-red-500" /> {job.location}</span>
@@ -183,18 +210,20 @@ export default function JobDetailsPage() {
                                 {job.company.logo ? (
                                     <img src={job.company.logo} alt="Logo" className="h-16 w-16 rounded-xl border-2 border-slate-100 object-cover shadow-sm dark:border-zinc-800 sm:h-20 sm:w-20" />
                                 ) : (
-                                    <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-linear-to-br from-blue-500 to-indigo-600 text-xl font-bold text-white shadow-lg sm:h-20 sm:w-20 sm:text-2xl">
+                                    <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-xl font-bold text-white shadow-lg sm:h-20 sm:w-20 sm:text-2xl">
                                         {job.company.name.charAt(0)}
                                     </div>
                                 )}
                             </div>
 
                             <div className="mt-8 flex flex-wrap gap-3">
-                                <Badge color="blue">{job.jobType}</Badge>
+                                <Badge color="blue">{job.jobType || "Full-time"}</Badge>
                                 <Badge color="green" icon={<Banknote size={14} />}>
-                                    ₹{job.salary?.min?.toLocaleString()} - ₹{job.salary?.max?.toLocaleString()}
+                                    {typeof job.salary === 'object' && job.salary !== null
+                                        ? `₹${job.salary.min?.toLocaleString()} - ₹${job.salary.max?.toLocaleString()}`
+                                        : (job.salary || "Not Specified")}
                                 </Badge>
-                                <Badge color="purple">{job.workMode}</Badge>
+                                <Badge color="purple">{job.workMode || "On-site"}</Badge>
                             </div>
                         </motion.div>
 
@@ -244,17 +273,32 @@ export default function JobDetailsPage() {
                         >
                             <div className="mb-6">
                                 <h3 className="font-bold text-lg text-slate-900 dark:text-white">Apply Now</h3>
-                                <Link href={`/recruiter/${job.userId}`} className="inline-block">
+                                <Link href={`/recruiter/${job.userId || job.recruiterId}`} className="inline-block">
                                     <button className="text-blue-600 font-medium hover:underline cursor-pointer">
                                         View Recruiter Profile
                                     </button>
                                 </Link>
                                 <p className="text-sm text-slate-500 mt-1">
-                                    Complete the steps below to apply.
+                                    {isClosed ? "This job is no longer accepting applications." : "Complete the steps below to apply."}
                                 </p>
                             </div>
 
-                            {hasApplied ? (
+                            {/* CONDITIONAL RENDER: CLOSED vs APPLIED vs OPEN */}
+                            {isClosed ? (
+                                <motion.div
+                                    initial={{ scale: 0.9, opacity: 0 }}
+                                    animate={{ scale: 1, opacity: 1 }}
+                                    className="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl p-6 text-center"
+                                >
+                                    <div className="w-16 h-16 bg-slate-200 dark:bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-3 text-slate-500 dark:text-slate-400">
+                                        <AlertCircle size={32} />
+                                    </div>
+                                    <h4 className="font-bold text-slate-700 dark:text-slate-300">Applications Closed</h4>
+                                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                                        The deadline for this position has passed.
+                                    </p>
+                                </motion.div>
+                            ) : hasApplied ? (
                                 <motion.div
                                     initial={{ scale: 0.9, opacity: 0 }}
                                     animate={{ scale: 1, opacity: 1 }}
@@ -270,7 +314,6 @@ export default function JobDetailsPage() {
                                 </motion.div>
                             ) : (
                                 <div className="space-y-6">
-
                                     {/* --- FILE UPLOAD ZONE --- */}
                                     <div>
                                         <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
@@ -336,7 +379,7 @@ export default function JobDetailsPage() {
                                     <button
                                         onClick={handleApply}
                                         disabled={applying || !resume}
-                                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-linear-to-r from-blue-600 to-indigo-600 py-4 text-base font-bold text-white shadow-lg shadow-blue-600/30 transition-all hover:from-blue-700 hover:to-indigo-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none sm:text-lg"
+                                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 py-4 text-base font-bold text-white shadow-lg shadow-blue-600/30 transition-all hover:from-blue-700 hover:to-indigo-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none sm:text-lg"
                                     >
                                         {applying ? (
                                             <>
@@ -358,7 +401,7 @@ export default function JobDetailsPage() {
                         <div className="bg-white dark:bg-zinc-900 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-zinc-800">
                             <h3 className="font-bold text-sm uppercase tracking-wider text-slate-500 mb-4">About Company</h3>
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-slate-100 dark:bg-zinc-800 rounded-lg flex items-center justify-center font-bold text-slate-500">
+                                <div className="w-10 h-10 shrink-0 bg-slate-100 dark:bg-zinc-800 rounded-lg flex items-center justify-center font-bold text-slate-500">
                                     {job.company.name.charAt(0)}
                                 </div>
                                 <div>

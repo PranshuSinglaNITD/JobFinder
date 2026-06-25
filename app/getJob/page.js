@@ -30,16 +30,30 @@ export default function FindJobsPage() {
     fetchJobs();
   }, []);
 
-  // 2. Filter Logic
-  const filteredJobs = jobs.filter((job) => {
-    const matchesSearch = 
-      job.title.toLowerCase().includes(search.toLowerCase()) || 
-      job.company?.name.toLowerCase().includes(search.toLowerCase());
-    
-    const matchesType = filterType === "All" || job.workMode === filterType;
+  // 2. Filter & Sort Logic
+  const filteredJobs = jobs
+    .filter((job) => {
+      const matchesSearch = 
+        job.title?.toLowerCase().includes(search.toLowerCase()) || 
+        job.company?.name?.toLowerCase().includes(search.toLowerCase());
+      
+      const matchesType = filterType === "All" || job.workMode === filterType;
 
-    return matchesSearch && matchesType;
-  });
+      return matchesSearch && matchesType;
+    })
+    .sort((a, b) => {
+      // Logic: Check if job is expired or manually closed
+      const now = new Date();
+      const aIsExpiredOrClosed = a.isActive === false || (a.expiresAt && new Date(a.expiresAt) <= now);
+      const bIsExpiredOrClosed = b.isActive === false || (b.expiresAt && new Date(b.expiresAt) <= now);
+
+      // If one is expired and the other is active, push the expired one to the bottom
+      if (aIsExpiredOrClosed && !bIsExpiredOrClosed) return 1;
+      if (!aIsExpiredOrClosed && bIsExpiredOrClosed) return -1;
+
+      // If both have the same status (both active OR both expired), sort by newest first
+      return new Date(b.createdAt) - new Date(a.createdAt);
+    });
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-black font-sans text-slate-900 dark:text-slate-100">

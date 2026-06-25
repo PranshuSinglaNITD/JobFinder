@@ -22,7 +22,11 @@ const connectDb = async () => {
   if (!cached.promise) {
     cached.promise = mongoose
       .connect(MONGO_URI, { bufferCommands: false })
-      .then((mongooseInstance) => mongooseInstance);
+      .then((mongooseInstance) => {
+        // ADD THIS CONSOLE LOG:
+        console.log("🕵️ Next.js is officially connected to Database:", mongooseInstance.connection.name);
+        return mongooseInstance;
+      });
   }
 
   try {

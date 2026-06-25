@@ -69,7 +69,6 @@ export async function POST(req) {
                 },
             });
 
-            // Killer UI Email Template
             const emailHtml = `
             <!DOCTYPE html>
             <html>

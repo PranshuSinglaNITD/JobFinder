@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { 
   Bot, User, Sparkles, Loader2, Plus, 
-  MessageSquare, FileText, ArrowUp, Menu, X
+  MessageSquare, FileText, ArrowUp, Menu, X, CheckCircle
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
@@ -12,9 +12,8 @@ import ReactMarkdown from "react-markdown";
 export default function JobChatbot() {
   const { data: session } = useSession();
   
-  // --- STATE ---
   // History & Navigation
-  const [chats, setChats] = useState([]); // Sidebar history
+  const [chats, setChats] = useState([]);
   const [activeChatId, setActiveChatId] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   
@@ -24,23 +23,37 @@ export default function JobChatbot() {
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef(null);
 
-  // New Chat Setup State (The Resume Gatekeeper)
+  // Resume Gatekeeper States
   const [resumeText, setResumeText] = useState("");
+  const [hasMasterResume, setHasMasterResume] = useState(false);
   const [isSettingUp, setIsSettingUp] = useState(true);
+  const [showManualOverride, setShowManualOverride] = useState(false);
 
+  // 1. Initialize Mobile Sidebar & Check for Master Resume
   useEffect(() => {
-    if (typeof window !== "undefined" && window.innerWidth < 768) {
-      setSidebarOpen(false);
+    if (typeof window !== "undefined") {
+      if (window.innerWidth < 768) setSidebarOpen(false);
+
+      // Check if they already saved a Master Resume in their profile
+      const localUser = JSON.parse(localStorage.getItem("user") || "{}");
+      if (localUser.resumeText) {
+        setResumeText(localUser.resumeText);
+        setHasMasterResume(true);
+      }
     }
   }, []);
 
-  // --- 1. LOAD SIDEBAR HISTORY ---
-  // In a real app, you would fetch this from a new GET route: `/api/chat/history?userId=${session?.user?.id}`
+  // 2. Load Sidebar History
   useEffect(() => {
     const fetchHistory = async () => {
-      if (!session?.user?.id) return;
+      // Use NextAuth ID or fallback to LocalStorage ID
+      const localUser = JSON.parse(localStorage.getItem("user") || "{}");
+      const userId = session?.user?.id || localUser._id;
+      
+      if (!userId) return;
+      
       try {
-        const res = await fetch(`/api/chat/history?userId=${session.user.id}`);
+        const res = await fetch(`/api/chat/history?userId=${userId}`);
         if (res.ok) {
           const data = await res.json();
           setChats(data.chats);
@@ -57,20 +70,31 @@ export default function JobChatbot() {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
-  // --- 2. START A NEW CHAT ---
+  // 3. Start a New Chat
   const handleNewChat = () => {
     setActiveChatId(null);
     setMessages([]);
-    setResumeText("");
     setIsSettingUp(true);
-    if (window.innerWidth < 768) setSidebarOpen(false); // Close sidebar on mobile
+    setShowManualOverride(false);
+    
+    // Reset to Master Resume if they have one
+    const localUser = JSON.parse(localStorage.getItem("user") || "{}");
+    if (localUser.resumeText) {
+      setResumeText(localUser.resumeText);
+      setHasMasterResume(true);
+    } else {
+      setResumeText("");
+      setHasMasterResume(false);
+    }
+
+    if (window.innerWidth < 768) setSidebarOpen(false);
   };
 
-  // --- 3. LOAD AN OLD CHAT ---
+  // 4. Load an Old Chat
   const loadChat = async (chatId) => {
     setActiveChatId(chatId);
     setIsSettingUp(false);
-    setMessages([]); // Clear current UI temporarily
+    setMessages([]);
     setLoading(true);
     
     try {
@@ -78,8 +102,6 @@ export default function JobChatbot() {
       if (res.ok) {
         const data = await res.json();
         setMessages(data.messages);
-        
-        // 🚨 ADD THIS LINE: Restore the resume context so they can continue chatting seamlessly
         setResumeText(data.resumeText || ""); 
       }
     } catch (err) {
@@ -91,12 +113,11 @@ export default function JobChatbot() {
     if (window.innerWidth < 768) setSidebarOpen(false);
   };
 
-  // --- 4. SEND MESSAGE TO LANGGRAPH ---
+  // 5. Send Message
   const handleSend = async (e) => {
     e?.preventDefault();
     if (!input.trim() || (!activeChatId && !resumeText.trim())) return;
 
-    // If this is the first message, close the setup screen
     if (isSettingUp) setIsSettingUp(false);
 
     const userMessage = { role: "user", content: input };
@@ -105,16 +126,19 @@ export default function JobChatbot() {
     setLoading(true);
 
     try {
-      // Calls the Next.js API we built earlier
+      const localUser = JSON.parse(localStorage.getItem("user") || "{}");
+      const userId = session?.user?.id || localUser._id;
+      const userName = session?.user?.firstName || localUser.firstName || "Candidate";
+
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
-          chatId: activeChatId, // Will be null for new chats
-          userId: session?.user?.id,
-          userName: session?.user?.firstName || "Candidate",
+          chatId: activeChatId, 
+          userId: userId,
+          userName: userName,
           message: userMessage.content,
-          resumeText: resumeText // Only needed for the first message
+          resumeText: resumeText // Feeds the freshest resume to Python
         }),
       });
 
@@ -123,10 +147,9 @@ export default function JobChatbot() {
       if (res.ok) {
         setMessages((prev) => [...prev, { role: "model", content: data.reply }]);
         
-        // If this was a new chat, the backend created an ID. Let's save it.
+        // Optimistically add new chat to sidebar
         if (!activeChatId && data.chatId) {
           setActiveChatId(data.chatId);
-          // Optimistically add to sidebar
           setChats(prev => [{ _id: data.chatId, title: userMessage.content.substring(0, 25) + "..." }, ...prev]);
         }
       } else {
@@ -144,7 +167,7 @@ export default function JobChatbot() {
     <div className="flex h-[calc(100svh-4rem)] min-h-[34rem] overflow-hidden bg-white font-sans text-slate-900 dark:bg-black dark:text-slate-100">
       {sidebarOpen && <div className="absolute inset-0 z-20 bg-black/30 md:hidden" onClick={() => setSidebarOpen(false)} />}
       
-      {/* --- SIDEBAR (History) --- */}
+      {/* --- SIDEBAR --- */}
       <AnimatePresence>
         {sidebarOpen && (
           <motion.div 
@@ -204,37 +227,82 @@ export default function JobChatbot() {
 
         <div className="flex-1 overflow-y-auto scroll-smooth relative">
           
-          {/* THE SETUP SCREEN (Only shows on New Chat before first message) */}
+          {/* THE SETUP SCREEN (Resume Gatekeeper) */}
           <AnimatePresence>
             {isSettingUp && (
               <motion.div 
                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}
-                className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-slate-50/90 p-4 backdrop-blur-sm dark:bg-black/90 sm:p-6"
+                className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-slate-50/90 p-4 backdrop-blur-sm dark:bg-black/90 sm:p-6 overflow-y-auto"
               >
                 <div className="w-20 h-20 bg-gradient-to-tr from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center mb-6 shadow-xl shadow-blue-500/20">
                   <Bot size={40} className="text-white" />
                 </div>
-                <h2 className="mb-2 text-center text-2xl font-extrabold sm:text-3xl">Let&apos;s find your next role.</h2>
-                <p className="text-slate-500 text-center max-w-md mb-8">
-                  To give you personalized job matches and career advice, I need to know your background.
-                </p>
+                
+                {hasMasterResume && !showManualOverride ? (
+                  /* STATE 1: Master Resume Found */
+                  <div className="w-full max-w-md text-center">
+                    <h2 className="mb-2 text-2xl font-extrabold sm:text-3xl">Ready to go.</h2>
+                    <p className="text-slate-500 mb-6">I have securely loaded your Master Resume from your profile.</p>
+                    
+                    <div className="bg-white dark:bg-zinc-900 border border-emerald-200 dark:border-emerald-900/50 rounded-2xl p-5 mb-8 shadow-sm flex flex-col items-center">
+                      <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 rounded-full flex items-center justify-center mb-3">
+                        <CheckCircle size={24} />
+                      </div>
+                      <h3 className="font-bold text-slate-900 dark:text-white">Resume Linked</h3>
+                      <p className="text-sm text-slate-500 mt-1">I will use this context to match and apply to jobs for you.</p>
+                    </div>
 
-                <div className="w-full max-w-xl rounded-2xl border border-slate-200 bg-white p-4 shadow-xl dark:border-zinc-800 dark:bg-zinc-900 sm:p-6">
-                  <label className="flex items-center gap-2 font-bold mb-3 text-slate-700 dark:text-slate-300">
-                    <FileText size={18} className="text-blue-600" /> Paste your Resume / LinkedIn Summary
-                  </label>
-                  <textarea 
-                    value={resumeText}
-                    onChange={(e) => setResumeText(e.target.value)}
-                    placeholder="E.g., I am a Full Stack Developer with 3 years of experience in React, Node.js, and MongoDB..."
-                    className="w-full h-40 p-4 rounded-xl bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-zinc-700 focus:ring-2 focus:ring-blue-500 outline-none resize-none text-sm font-medium"
-                  />
-                </div>
+                    <button 
+                      onClick={() => setIsSettingUp(false)}
+                      className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-600/20 transition-all mb-4"
+                    >
+                      Start Chatting
+                    </button>
+                    <button 
+                      onClick={() => {
+                        setShowManualOverride(true);
+                        setResumeText(""); // Clear it so they can paste a new one
+                      }}
+                      className="text-sm text-slate-500 hover:text-blue-600 transition-colors underline underline-offset-4"
+                    >
+                      I want to paste a different resume for this chat
+                    </button>
+                  </div>
+                ) : (
+                  /* STATE 2: Manual Entry (No Master Resume OR User Clicked Override) */
+                  <div className="w-full max-w-xl text-center">
+                    <h2 className="mb-2 text-2xl font-extrabold sm:text-3xl">Let&apos;s map your skills.</h2>
+                    <p className="text-slate-500 mb-6">Paste your resume text below so I can analyze jobs perfectly.</p>
+
+                    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xl dark:border-zinc-800 dark:bg-zinc-900 sm:p-6 text-left">
+                      <label className="flex items-center justify-between mb-3">
+                        <span className="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-300">
+                          <FileText size={18} className="text-blue-600" /> Resume / LinkedIn Data
+                        </span>
+                        {hasMasterResume && (
+                          <button onClick={() => {
+                            const localUser = JSON.parse(localStorage.getItem("user") || "{}");
+                            setResumeText(localUser.resumeText || "");
+                            setShowManualOverride(false);
+                          }} className="text-xs text-blue-600 hover:underline">
+                            Cancel
+                          </button>
+                        )}
+                      </label>
+                      <textarea 
+                        value={resumeText}
+                        onChange={(e) => setResumeText(e.target.value)}
+                        placeholder="E.g., I am a Full Stack Developer with 3 years of experience..."
+                        className="w-full h-48 p-4 rounded-xl bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-zinc-700 focus:ring-2 focus:ring-blue-500 outline-none resize-none text-sm font-medium"
+                      />
+                    </div>
+                  </div>
+                )}
               </motion.div>
             )}
           </AnimatePresence>
 
-          {/* THE ACTUAL MESSAGES */}
+          {/* THE MESSAGES */}
           <div className="mx-auto max-w-4xl space-y-6 p-4 pb-28 sm:p-6 sm:pb-32">
             {messages.map((msg, idx) => (
               <motion.div 
@@ -254,7 +322,7 @@ export default function JobChatbot() {
                     : "bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-bl-sm shadow-sm"
                 }`}>
                   {msg.role !== "user" ? (
-                    <div className="prose prose-sm dark:prose-invert max-w-none">
+                    <div className="prose prose-sm dark:prose-invert max-w-none prose-a:text-blue-600">
                       <ReactMarkdown>{msg.content}</ReactMarkdown>
                     </div>
                   ) : (
@@ -294,23 +362,20 @@ export default function JobChatbot() {
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder={isSettingUp ? "Type your first question here..." : "Ask JobBot..."}
+                placeholder={isSettingUp && !hasMasterResume ? "Paste your resume above first..." : "Ask JobBot..."}
                 className="w-full pl-6 pr-16 py-4 bg-transparent focus:outline-none text-base"
-                disabled={loading || (isSettingUp && resumeText.trim().length < 10)}
+                disabled={loading || (isSettingUp && resumeText.trim().length < 10 && !hasMasterResume)}
               />
               <div className="absolute right-2 flex items-center">
                 <button 
                   type="submit" 
-                  disabled={!input.trim() || loading || (isSettingUp && resumeText.trim().length < 10)}
+                  disabled={!input.trim() || loading || (isSettingUp && resumeText.trim().length < 10 && !hasMasterResume)}
                   className="p-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-all disabled:opacity-50 disabled:hover:bg-blue-600 shadow-md"
                 >
                   {loading ? <Loader2 className="animate-spin w-5 h-5" /> : <ArrowUp size={20} />}
                 </button>
               </div>
             </form>
-            {isSettingUp && resumeText.trim().length < 10 && (
-              <p className="text-xs text-red-500 mt-2 text-center font-medium">Please paste your resume context above before chatting.</p>
-            )}
           </div>
         </div>
 

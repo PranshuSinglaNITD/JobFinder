@@ -2,18 +2,18 @@
 
 import { useState, useEffect } from "react";
 import {
-    CheckCircle, XCircle, Calendar, X
+    CheckCircle, XCircle, Calendar, X, Award
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSession } from "next-auth/react";
 import SalaryChart from "@/components/SalaryChart";
 
 export default function RecruiterApplications() {
-    const { data: session } = useSession()
+    const { data: session } = useSession();
     const [apps, setApps] = useState([]);
     const [filteredApps, setFilteredApps] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [filter, setFilter] = useState("All"); // All, Applied, Shortlisted, Rejected
+    const [filter, setFilter] = useState("All"); // All, Applied, Shortlisted, Hired, Rejected
 
     // Modal State
     const [selectedApp, setSelectedApp] = useState(null);
@@ -45,7 +45,26 @@ export default function RecruiterApplications() {
         else setFilteredApps(apps.filter(app => app.status === filter));
     }, [filter, apps]);
 
-    // 3. Handle Reject
+    // 3. Dynamic Notification Sender
+    const triggerNotification = async (candidateId, type, content) => {
+        try {
+            if (!candidateId) return;
+            const res = await fetch('/api/notification/trigger', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    recipientId: candidateId,
+                    type: type,
+                    content: content
+                })
+            });
+            if (!res.ok) throw new Error("Server error sending notification");
+        } catch (err) {
+            console.log(err);
+        }
+    };
+
+    // 4. Handle Reject
     const handleReject = async (id) => {
         if (!confirm("Are you sure you want to reject this candidate?")) return;
         try {
@@ -54,40 +73,51 @@ export default function RecruiterApplications() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ applicationId: id, status: "Rejected" })
             });
-            // Update UI locally
             setApps(prev => prev.map(a => a._id === id ? { ...a, status: "Rejected" } : a));
         } catch (err) { alert("Error updating status"); }
     };
 
-    const handleNotification = async (candidateId) => {
+    // 5. Handle Hire (NEW)
+    const handleHire = async (app) => {
+        if (!confirm(`Are you sure you want to hire ${app.applicantId?.firstName}? This will send an official offer email.`)) return;
+        setProcessing(true);
         try {
-            // const user = JSON.parse(localStorage.getItem("user"));
-            if (!candidateId) return;
-            const res = await fetch('/api/notification/trigger', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    recipientId: candidateId,
-                    type: 'PROFILE_VIEW',
-                    content: `A top recruiter from ${session?.user?.companyName} viewed your JobFinder profile`
+            const res = await fetch("/api/applications/status", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ 
+                    applicationId: app._id, 
+                    status: "Hired" 
                 })
-            })
-            if (!res.ok) throw new Error("server error")
-            const data = await res.json()
-            console.log(data)
+            });
+            
+            if (res.ok) {
+                // Update local UI
+                setApps(prev => prev.map(a => a._id === app._id ? { ...a, status: "Hired" } : a));
+                
+                // Trigger In-App Notification
+                triggerNotification(
+                    app.applicantId._id, 
+                    'APPLICATION_UPDATE', 
+                    `Congratulations! You have been hired for the ${app.jobId?.title} role at ${session?.user?.companyName || "our company"}. Please check your email for the offer details!`
+                );
+                
+                alert("Candidate Hired! Offer Email and Notification Sent.");
+            }
+        } catch (err) { 
+            alert("Error updating status"); 
+        } finally {
+            setProcessing(false);
         }
-        catch (err) {
-            console.log(err)
-        }
-    }
+    };
 
-    // 4. Handle Accept (Open Modal)
+    // 6. Handle Accept (Open Modal)
     const openAcceptModal = (app) => {
         setSelectedApp(app);
         setShowModal(true);
     };
 
-    // 5. Submit Acceptance
+    // 7. Submit Shortlist
     const submitAccept = async (e) => {
         e.preventDefault();
         setProcessing(true);
@@ -104,6 +134,14 @@ export default function RecruiterApplications() {
             if (res.ok) {
                 setApps(prev => prev.map(a => a._id === selectedApp._id ? { ...a, status: "Shortlisted" } : a));
                 setShowModal(false);
+                
+                // Send interview notification
+                triggerNotification(
+                    selectedApp.applicantId._id, 
+                    'APPLICATION_UPDATE', 
+                    `Good news! You've been shortlisted for an interview for ${selectedApp.jobId?.title}. Check your email for the schedule.`
+                );
+
                 alert("Candidate Shortlisted & Email Sent!");
             }
         } catch (err) { alert("Failed to send email"); }
@@ -124,7 +162,8 @@ export default function RecruiterApplications() {
                     </div>
 
                     <div className="flex flex-wrap gap-2 rounded-lg border border-slate-200 bg-white p-1 dark:border-zinc-800 dark:bg-zinc-900">
-                        {["All", "Applied", "Shortlisted", "Rejected"].map(f => (
+                        {/* Added "Hired" to the filter mapping array */}
+                        {["All", "Applied", "Shortlisted", "Hired", "Rejected"].map(f => (
                             <button
                                 key={f}
                                 onClick={() => setFilter(f)}
@@ -149,7 +188,7 @@ export default function RecruiterApplications() {
                         >
                             {/* Candidate Info */}
                             <div className="flex flex-1 items-start gap-3 sm:gap-4">
-                                <div className="h-12 w-12 rounded-full bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-lg">
+                                <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-lg">
                                     {app.applicantId?.firstName?.[0] || "U"}
                                 </div>
                                 <div>
@@ -168,7 +207,7 @@ export default function RecruiterApplications() {
                                 </div>
                                 {app.resumeName && (
                                     <div
-                                        onClick={() => handleNotification(app.applicantId._id)}
+                                        onClick={() => triggerNotification(app.applicantId._id, 'PROFILE_VIEW', `A top recruiter from ${session?.user?.companyName || "a company"} viewed your JobFinder profile.`)}
                                         className="flex items-center gap-2 text-blue-600 hover:underline cursor-pointer"
                                     >
                                         <a href={app.resumeName} download={app.resumeName}> {app.resumeName}</a>
@@ -179,7 +218,8 @@ export default function RecruiterApplications() {
                             {/* Actions */}
                             <div className="mt-2 flex w-full flex-col gap-3 border-t border-slate-100 pt-4 dark:border-zinc-800 sm:flex-row sm:items-center lg:mt-0 lg:w-auto lg:border-t-0 lg:pt-0">
 
-                                {app.status === "Applied" ? (
+                                {/* Allow actions if they are Applied OR already Shortlisted */}
+                                {app.status === "Applied" || app.status === "Shortlisted" ? (
                                     <>
                                         <button
                                             onClick={() => handleReject(app._id)}
@@ -187,17 +227,34 @@ export default function RecruiterApplications() {
                                         >
                                             Reject
                                         </button>
+                                        
+                                        {/* Only show Shortlist if they are fresh applicants */}
+                                        {app.status === "Applied" && (
+                                            <button
+                                                onClick={() => openAcceptModal(app)}
+                                                className="cursor-pointer flex-1 px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-600/20 font-medium transition-colors"
+                                            >
+                                                Interview
+                                            </button>
+                                        )}
+
                                         <button
-                                            onClick={() => openAcceptModal(app)}
-                                            className="cursor-pointer flex-1 px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-600/20 font-medium transition-colors"
+                                            onClick={() => handleHire(app)}
+                                            disabled={processing}
+                                            className="cursor-pointer flex-1 px-6 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-600/20 font-medium transition-colors disabled:opacity-50"
                                         >
-                                            Shortlist & Interview
+                                            Hire
                                         </button>
                                     </>
                                 ) : (
-                                    <span className={`px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 ${app.status === "Shortlisted" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                                    <span className={`px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 
+                                        ${app.status === "Hired" ? "bg-indigo-100 text-indigo-700" : 
+                                          app.status === "Shortlisted" ? "bg-green-100 text-green-700" : 
+                                          "bg-red-100 text-red-700"
                                         }`}>
-                                        {app.status === "Shortlisted" ? <CheckCircle size={16} /> : <XCircle size={16} />}
+                                        {app.status === "Hired" ? <Award size={16} /> : 
+                                         app.status === "Shortlisted" ? <CheckCircle size={16} /> : 
+                                         <XCircle size={16} />}
                                         {app.status}
                                     </span>
                                 )}
@@ -222,7 +279,7 @@ export default function RecruiterApplications() {
                             >
                                 <div className="p-6 border-b border-slate-100 dark:border-zinc-800 flex justify-between items-center">
                                     <h3 className="font-bold text-lg">Schedule Interview</h3>
-                                    <button onClick={() => setShowModal(false)}><X className=" cursor-pointer text-slate-400 hover:text-slate-600" /></button>
+                                    <button onClick={() => setShowModal(false)}><X className="cursor-pointer text-slate-400 hover:text-slate-600" /></button>
                                 </div>
 
                                 <form onSubmit={submitAccept} className="p-6 space-y-4">
@@ -266,7 +323,7 @@ export default function RecruiterApplications() {
                                         ></textarea>
                                     </div>
 
-                                    <button disabled={processing} className="w-full py-3 bg-green-600 text-white font-bold rounded-xl cursor-pointer  hover:bg-green-700 transition-colors flex items-center justify-center gap-2">
+                                    <button disabled={processing} className="w-full py-3 bg-green-600 text-white font-bold rounded-xl cursor-pointer hover:bg-green-700 transition-colors flex items-center justify-center gap-2">
                                         {processing ? "Sending Email..." : "Confirm & Send Invite"}
                                     </button>
                                 </form>

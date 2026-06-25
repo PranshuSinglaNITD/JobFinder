@@ -4,6 +4,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import AuthProvider from "./AuthProvider";
+import DashboardLayout from "@/components/DashboardLayout";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -18,9 +19,9 @@ export default function RootLayout({ children }) {
       <body className={inter.className}>
         <AuthProvider>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-        <Navbar /> 
-        {children}
-        <Footer/>
+        <DashboardLayout>
+              {children}
+          </DashboardLayout>
         </ThemeProvider>
         </AuthProvider>
       </body>

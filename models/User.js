@@ -53,6 +53,7 @@ const userSchema = new mongoose.Schema(
     },
     skills: { type: Array, default: [] },
     resumeText: { type: String, default: "" }, 
+    resumeName:{type:String,default:""},
     isSearchable: { type: Boolean, default: true }
   },
   { timestamps: true }

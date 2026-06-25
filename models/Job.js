@@ -32,11 +32,20 @@ const jobSchema = new mongoose.Schema(
     description: { type: String, required: true },
     requirements: [String], // Array of skills/requirements
     applicants: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }], // Track who applied
-    status: { type: String, enum: ["Active", "Closed"], default: "Active" }
+    status: { type: String, enum: ["Active", "Closed"], default: "Active" },
+    aiSuggestions: { type: Array, default: [] },
+    expiresAt: {
+        type: Date,
+        required: true,
+    },
+    isActive: {
+        type: Boolean,
+        default: true
+    }
   },
   { timestamps: true }
 );
 
-const Job = mongoose.models.Job || mongoose.model("Job", jobSchema);
+const Job = mongoose.models.Job || mongoose.model("Job", jobSchema,"jobs");
 
 export default Job;

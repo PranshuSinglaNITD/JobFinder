@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { 
   User, Lock, Camera, Save, 
   MapPin, Loader2, CheckCircle, AlertCircle,
-  Shield, Briefcase, Mail, FileText, UploadCloud
+  Shield, Briefcase, Mail, FileText, UploadCloud, X
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -22,7 +22,7 @@ export default function CandidateProfile() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
   
-  // --- NEW STATE FOR RESUME UPLOAD ---
+  // --- RESUME UPLOAD STATES ---
   const [resumeFile, setResumeFile] = useState(null);
   const [resumeStatus, setResumeStatus] = useState("idle"); // idle, loading, success, error
   const [resumeError, setResumeError] = useState("");
@@ -35,6 +35,8 @@ export default function CandidateProfile() {
     location: "",
     occupation: "",
     picturePath: "",
+    resumeUrl: "",   // NEW: Added to state
+    resumeName: "",  // NEW: Added to state
     currentPassword: "",
     newPassword: "",
     confirmPassword: ""
@@ -153,12 +155,17 @@ export default function CandidateProfile() {
     }
   };
 
-  // --- 6. RESUME UPLOAD HANDLERS ---
+  // --- 6. MASTER RESUME UPLOAD HANDLERS ---
   const handleResumeChange = (e) => {
     if (e.target.files && e.target.files[0]) {
       setResumeFile(e.target.files[0]);
       setResumeStatus("idle");
     }
+  };
+
+  const clearSelectedResume = () => {
+    setResumeFile(null);
+    setResumeStatus("idle");
   };
 
   const handleResumeUpload = async () => {
@@ -169,18 +176,43 @@ export default function CandidateProfile() {
 
     const payload = new FormData();
     payload.append("file", resumeFile);
-    payload.append("userId", formData._id); // Using ID from local state
+    payload.append("userId", formData._id); 
 
     try {
+      // Changed to our new merged route!
       const res = await fetch("/api/users/resume", {
         method: "POST",
         body: payload,
       });
 
+      const data = await res.json();
+
       if (res.ok) {
         setResumeStatus("success");
+        
+        // 1. Update the Local Component State
+        setFormData(prev => ({ 
+            ...prev, 
+            resumeUrl: data.resumeUrl, 
+            resumeName: data.resumeName 
+        }));
+
+        // 2. Permanently Update LocalStorage so it survives refreshes
+        const storedUser = JSON.parse(localStorage.getItem("user"));
+        storedUser.resumeUrl = data.resumeUrl;
+        storedUser.resumeName = data.resumeName;
+        localStorage.setItem("user", JSON.stringify(storedUser));
+        
+        // Trigger navbar update if needed
+        window.dispatchEvent(new Event("storage"));
+
+        // Reset the file input so they see the success view
+        setTimeout(() => {
+            setResumeFile(null);
+            setResumeStatus("idle");
+        }, 2000);
+
       } else {
-        const data = await res.json();
         setResumeError(data.message || "Upload failed.");
         setResumeStatus("error");
       }
@@ -191,7 +223,7 @@ export default function CandidateProfile() {
     }
   };
 
-  // Updated Tabs Array
+  // Tabs Array
   const tabs = [
     { id: "general", label: "My Profile", icon: User },
     { id: "resume", label: "My Resume", icon: FileText },
@@ -360,7 +392,7 @@ export default function CandidateProfile() {
                   </motion.form>
                 )}
 
-                {/* --- NEW TAB: RESUME UPLOAD --- */}
+                {/* --- UPDATED TAB: MASTER RESUME UPLOAD --- */}
                 {activeTab === "resume" && (
                   <motion.div 
                     key="resume"
@@ -377,22 +409,64 @@ export default function CandidateProfile() {
                         </p>
                     </div>
 
-                    <div className="flex flex-col gap-6">
-                      <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-slate-300 dark:border-zinc-700 rounded-2xl cursor-pointer hover:bg-slate-50 dark:hover:bg-zinc-800/50 transition-colors group">
-                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                          <UploadCloud className="w-10 h-10 text-blue-500 mb-3 group-hover:scale-110 transition-transform" />
-                          <p className="text-base text-slate-600 dark:text-slate-400 font-medium mb-1">
-                            {resumeFile ? resumeFile.name : "Click or drag to upload"}
-                          </p>
-                          <p className="text-xs text-slate-400">PDF, DOCX, or DOC (Max 5MB)</p>
+                    {/* NEW: Display active Master Resume if it exists */}
+                    {formData.resumeUrl && (
+                        <div className="p-5 bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-900/50 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 relative overflow-hidden">
+                            <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500"></div>
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center shrink-0">
+                                    <CheckCircle size={24} />
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-slate-900 dark:text-white text-lg">Master Resume Active</h3>
+                                    <p className="text-sm text-slate-500 mb-1">This resume is permanently linked to your profile.</p>
+                                    <a href={formData.resumeUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors">
+                                        <FileText size={16} /> {formData.resumeName || "View Document"}
+                                    </a>
+                                </div>
+                            </div>
                         </div>
-                        <input 
-                          type="file" 
-                          className="hidden" 
-                          accept=".pdf,.docx,.doc" 
-                          onChange={handleResumeChange} 
-                        />
-                      </label>
+                    )}
+
+                    <div className="flex flex-col gap-6">
+                      <h3 className="text-lg font-bold border-b border-slate-100 dark:border-zinc-800 pb-2">
+                          {formData.resumeUrl ? "Upload a Replacement" : "Upload New Resume"}
+                      </h3>
+                      
+                      {!resumeFile ? (
+                          <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-slate-300 dark:border-zinc-700 rounded-2xl cursor-pointer hover:bg-slate-50 dark:hover:bg-zinc-800/50 transition-colors group">
+                            <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                              <UploadCloud className="w-10 h-10 text-blue-500 mb-3 group-hover:scale-110 transition-transform" />
+                              <p className="text-base text-slate-600 dark:text-slate-400 font-medium mb-1">
+                                Click or drag to upload
+                              </p>
+                              <p className="text-xs text-slate-400">PDF, DOCX, or DOC (Max 5MB)</p>
+                            </div>
+                            <input 
+                              type="file" 
+                              className="hidden" 
+                              accept=".pdf,.docx,.doc" 
+                              onChange={handleResumeChange} 
+                            />
+                          </label>
+                      ) : (
+                          <div className="relative bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-xl p-4 flex items-center justify-between group">
+                              <div className="flex items-center gap-3 overflow-hidden">
+                                <div className="p-2 bg-white dark:bg-blue-900 rounded-lg text-blue-600 shadow-sm shrink-0">
+                                    <FileText size={20} />
+                                </div>
+                                <p className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate">
+                                    {resumeFile.name}
+                                </p>
+                              </div>
+                              <button 
+                                onClick={clearSelectedResume}
+                                className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors shrink-0"
+                              >
+                                  <X size={18} />
+                              </button>
+                          </div>
+                      )}
 
                       <button
                         onClick={handleResumeUpload}

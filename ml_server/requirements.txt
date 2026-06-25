@@ -12,3 +12,4 @@ python-docx
 python-dotenv
 pydantic
 numpy==1.26.4
+boto3==1.34.0

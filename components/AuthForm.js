@@ -87,6 +87,7 @@ export default function AuthForm({ initialView = "login" }) {
                 if (res.ok) {
                     localStorage.setItem("token", data.token);
                     localStorage.setItem("user", JSON.stringify(data.user));
+                    document.cookie = `token=${data.token}; path=/; max-age=86400; SameSite=Strict`;
                     window.dispatchEvent(new Event("storage"));
 
                     if (data.user.role === "recruiter") {

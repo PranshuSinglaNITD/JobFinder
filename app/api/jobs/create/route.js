@@ -1,23 +1,39 @@
 import { NextResponse } from "next/server";
 import Job from "@/models/Job";
-import connectDb from "@/middleware/mongoose";
+// Note: If you renamed 'middleware' to 'lib' earlier to fix the proxy issue, 
+// make sure this path matches your folder structure!
+import connectDb from "@/middleware/mongoose"; 
 
 export async function POST(req) {
   try {
     await connectDb();
 
     const body = await req.json();
-    
-    // Destructure all fields
+  
     const { 
       recruiterId, title, companyName, companyLogo, 
       location, workMode, jobType, salaryMin, salaryMax, 
-      description, requirements 
+      description, requirements, expiresAt 
     } = body;
 
-    // Basic Validation
     if (!recruiterId || !title || !companyName || !description) {
       return NextResponse.json({ message: "Missing required fields" }, { status: 400 });
+    }
+
+    let parsedRequirements = [];
+    if (Array.isArray(requirements)) {
+        parsedRequirements = requirements;
+    } else if (typeof requirements === 'string') {
+        parsedRequirements = requirements.split(',').map(req => req.trim()).filter(Boolean);
+    }
+
+    //Handle Expiration Date (With a 30-day safety fallback)
+    let finalExpiresAt;
+    if (expiresAt) {
+        finalExpiresAt = new Date(expiresAt);
+    } else {
+        finalExpiresAt = new Date();
+        finalExpiresAt.setDate(finalExpiresAt.getDate() + 30); // Default to 30 days
     }
 
     const newJob = new Job({
@@ -35,8 +51,9 @@ export async function POST(req) {
         max: Number(salaryMax) || 0,
       },
       description,
-      // Convert comma-separated string to array if needed
-      requirements: Array.isArray(requirements) ? requirements : [],
+      requirements: parsedRequirements, // Uses the safely parsed array
+      expiresAt: finalExpiresAt,        // Saves the expiration deadline
+      isActive: true                    // Explicitly mark as active upon creation
     });
 
     await newJob.save();
