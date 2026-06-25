@@ -2,8 +2,8 @@ import os
 import json
 import time
 import boto3
-import pymongo # <-- NEW
-from bson.objectid import ObjectId # <-- NEW
+import pymongo
+from bson.objectid import ObjectId
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 from google import genai
@@ -20,7 +20,7 @@ client = genai.Client(api_key=os.getenv('GEMINI_API_KEY'))
 # Connect to MongoDB directly
 mongo_client = pymongo.MongoClient(os.getenv("MONGO_URI"))
 db = mongo_client["JobFinder"] # Gets the DB name from your URI
-jobs_collection = db["jobs"] # Make sure this matches your MongoDB collection name (usually 'jobs')
+jobs_collection = db["jobs"] # Make sure this matches your MongoDB collection name
 
 def process_ranking_job(job_data):
     job_desc = job_data['job_description']
@@ -64,20 +64,20 @@ def process_ranking_job(job_data):
         })
 
     # --- 3. SAVE TO MONGODB ---
-    # This attaches the ranked candidates permanently to the Job posting!
-    res=jobs_collection.update_one(
+    res = jobs_collection.update_one(
         {"_id": ObjectId(job_id)},
         {"$set": {"aiSuggestions": ranked_results}}
     )
-    # print(db.name)
+    
     if res.matched_count == 0:
         print(f"DATABASE ERROR: Job {job_id} was NOT FOUND in the 'JobFinder' database!")
         print("Your Next.js app is saving jobs somewhere else (probably 'test').")
     else:
         print(f"✅ SUCCESS: Results permanently saved to Job {job_id}!")
 
-def poll_queue():
-    print("🎧 Worker listening for SQS messages...")
+
+def start_worker_loop():
+    print("🎧 Background SQS Worker Started! Listening for messages...")
     while True:
         try:
             response = sqs.receive_message(QueueUrl=QUEUE_URL, MaxNumberOfMessages=1, WaitTimeSeconds=10)
@@ -93,5 +93,6 @@ def poll_queue():
             print(f"Worker Error: {e}")
             time.sleep(5)
 
+# Keep this at the bottom so you can still test it manually if you ever type `python worker.py` in your terminal!
 if __name__ == "__main__":
-    poll_queue()
+    start_worker_loop()
